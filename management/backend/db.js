@@ -47,9 +47,15 @@ pool.connect((err, client, release) => {
 // CREATE - Add new user
 app.post('/createuser', async (req, res) => {
     try {
+<<<<<<< HEAD
         const { name, sku, description, price, delivery_cost, mark_up, vat,vendor,quantity,category } = req.body;
         const result = await pool.query(
             'INSERT INTO product (name,sku,description,price,delivery_cost,mark_up,vat,vendor,quantity,category)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category]
+=======
+        const { name, sku, description,price,delivery,markUp,vat } = req.body;
+        const result = await pool.query(
+            'INSERT INTO "Product" (name,sku,description,price,delivery_cost,mark_up,vat)  VALUES ($1,$2,$3 $4,$5,$6,$7) RETURNING *', [name, sku, description, price, delivery, markUp, vat]
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
             
             
         );
@@ -97,7 +103,11 @@ app.get('/api/users/:id', async (req, res) => {
 app.get('/api/sku/:sku', async (req, res) => {
     try {
         const { sku } = req.params;
+<<<<<<< HEAD
         const result = await pool.query('SELECT * FROM product WHERE sku = $1', [sku]);
+=======
+        const result = await pool.query('SELECT * FROM "Product" WHERE sku = $1', [sku]);
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
         console.log("Inside GET by SKU");
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
@@ -111,6 +121,30 @@ app.get('/api/sku/:sku', async (req, res) => {
 
 // UPDATE - Update user
 app.put('/updateuser/:id', async (req, res) => {
+<<<<<<< HEAD
+=======
+    try {
+        const { id } = req.params;
+        const { name, description, sku, retail_price, delivery_cost, mark_up, vat } = req.body;
+        const result = await pool.query(
+            'UPDATE "Product" SET name = $1, description = $2, sku = $3, price = $4, delivery_cost = $5 , mark_up = $6, vat = $7 WHERE "Id" = $8 RETURNING *',
+            [name, description, sku, retail_price, delivery_cost, mark_up, vat, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        console.log("Inside UPDATE, AT: " + timeStamp());
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// DELETE - Delete user
+app.delete('/api/deleteuser/:id', async (req, res) => {
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
     try {
         const { id } = req.params;
         const { name, description, sku, retail_price, delivery_cost, mark_up, vat, quantity, category,vendor } = req.body;

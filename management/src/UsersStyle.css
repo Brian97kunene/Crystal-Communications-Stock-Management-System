@@ -4,7 +4,11 @@
 }
 
 .logo {
+<<<<<<< HEAD
     margin-left: 00px;
+=======
+    margin-left: 400px;
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
 }
 
 .main {
@@ -32,6 +36,7 @@ button {
 
 }
 
+<<<<<<< HEAD
 .Products_List h2 {
     display:block;
 
@@ -64,6 +69,14 @@ button {
 .search_btn {
 
     margin-right: unset;
+=======
+
+.search_area {
+
+
+    display: flex;
+    justify-content: flex-end;
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
 }
 
 

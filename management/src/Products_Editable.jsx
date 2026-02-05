@@ -4,6 +4,7 @@ import './UsersStyle.css'
 
 // Component to edit a single product record
 const UserEditor = ({ user, onClose, onUpdated }) => {
+<<<<<<< HEAD
     const [form, setForm] = useState({ name: user.name, description: user.description, sku: user.sku, retail_price: user.price, delivery_cost: user.delivery_cost, mark_up:user.mark_up, vat: user.vat ,vendor:user.vendor,quantity:user.quantity,category:user.category});
     const port = 5552;
     const [vendors, setVendors] = useState([]);
@@ -31,6 +32,14 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
         try {
             //const port = 5557;
             const response = await fetch(`http://localhost:${port}/updateuser/${user.id}`, {
+=======
+    const [form, setForm] = useState({ name: user.name, description: user.description, sku: user.sku, retail_price: user.price, delivery_cost: user.delivery_cost, mark_up:user.mark_up, vat: user.vat });
+    const port = 5552;
+    const handleUpdate = async () => {
+        try {
+            //const port = 5557;
+            const response = await fetch(`http://localhost:${port}/updateuser/${user.Id}`, {
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
                 method: "PUT", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -59,7 +68,11 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
     const handleDelete = async () => {
         try {
            // const port = 5555;
+<<<<<<< HEAD
             const response = await fetch(`http://localhost:` + {port} +`/deleteuser/${user.id}`, {
+=======
+            const response = await fetch(`http://localhost:` + {port} +`/deleteuser/${user.Id}`, {
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
                 method: "DELETE", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -129,21 +142,28 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
                 value={form.mark_up}
                 onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
             />
+<<<<<<< HEAD
             <br/>
             <span className="tbl_headers">Delivery Cost</span>
             <br /> 
+=======
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
             <input
                 placeholder="Delivery Cost"
                 value={form.delivery_cost}
                 onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
             />
+<<<<<<< HEAD
             <br/>
             <span className="tbl_headers">Tax</span>
             <br /> 
+=======
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
             <input
                 placeholder="Tax"
                 value={form.vat}
                 onChange={(e) => setForm({ ...form, vat: e.target.value })}/>
+<<<<<<< HEAD
             <br />
             <span className="tbl_headers">Quantity</span><br />
             <input
@@ -171,6 +191,8 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
             <br />
             
 
+=======
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
             <button onClick={handleUpdate}>Save</button>
             <button onClick={handleDelete}>Delete</button>
             <button onClick={onClose}>Cancel</button>
@@ -184,7 +206,10 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
 // Main component showing list of users
 const UserList = () => {
 
+<<<<<<< HEAD
     //const [onpageshow, setOnPageShow] = useState(true)
+=======
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
     const port = 5552;
     const [users, setUsers] = useState([]);
     const [editingUser, setEditingUser] = useState(null);
@@ -222,6 +247,7 @@ const UserList = () => {
 
     return (
         <div className="Products_List">
+<<<<<<< HEAD
             <br />
             <button onClick={() => {
                 setProdVisibility(!ProdVisibility);
@@ -234,6 +260,19 @@ const UserList = () => {
 
             <table className="prod_table"  Id="prod_table">
                 <thead >
+=======
+        { editingUser && (
+            <UserEditor
+                user={editingUser}
+                onClose={() => setEditingUser(null)}
+                onUpdated={handleUserUpdated}
+            />
+        )};
+
+            <h2>Products List</h2>
+            <table className="prod_table" Id="prod_table">
+                <thead>
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
                     <tr>
                         
                         <th>SKU</th>
