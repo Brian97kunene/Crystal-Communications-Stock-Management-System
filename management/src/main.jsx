@@ -4,6 +4,8 @@ import './index.css'
 
 
 import Users from './Users.jsx'
+import ReadAFile from './ReadAFile.jsx'
+import Vendors from './Vendors.jsx'
 import EditableUsers from './Products_Editable.jsx'
 
 
@@ -11,21 +13,12 @@ import EditableUsers from './Products_Editable.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>           
         <Users />
+        <ReadAFile />
         <EditableUsers />
+        <Vendors />
   </StrictMode>,
 )
 
 
 
-
-//    < ul >
-//{
-//    users.map(u => (
-//        <li key={u.id}>
-//            {u.name} ({u.email})
-//            {/*<button onClick={() => updateUser(u.id)}>Update</button>*/}
-//            {/*<button onClick={() => deleteUser(u.id)}>Delete</button>*/}
-//        </li>
-//    ))
-//}
-//            </ul >
+  

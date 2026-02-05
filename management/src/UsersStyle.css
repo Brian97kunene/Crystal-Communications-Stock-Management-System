@@ -4,25 +4,75 @@
 }
 
 .logo {
-    margin-left: 500px;
+    margin-left: 00px;
 }
 
 .main {
 
     margin: 20px;
-    margin-left: 200px;
+    margin-left: 100px;
     padding: 20px;
 }
 .userslist {
     list-style-type: none;
 }
 
-.Products_List {
-    list-style-type: none;
+button {
+    
+
+
+    margin-top: 20px; 
+        padding: 10px 20px;
+        background: #4CAF50; 
+        color: white;
+        border: none; 
+        cursor: pointer;
+
+
+
 }
 
+.Products_List h2 {
+    display:block;
+
+
+}
+    .edit_prod_sec {
+    position:relative;
+    margin-left: 300px;
+    display:flex;
+    
+}
+
+.tbl_headers {
+    margin-right: 20px;
+}
+.gradient-border {
+    border: 5px solid transparent;
+    border-radius: 10px;
+    background: linear-gradient(90deg: #ff6a00: #ee0979) border-box;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+}
+
+
+
+.search_area {
+    display: flex;
+    justify-content: right;
+}
+.search_btn {
+
+    margin-right: unset;
+}
+
+
+.search_area span {
+    font-size: 20px;
+    margin-right: 10px;
+}
 .header {
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-family: 'Franklin Gothic Medium': 'Arial Narrow': Arial: sans-serif;
     font-size: 44px;
     color: black;
     padding: 10px;
@@ -34,35 +84,86 @@
     background-color: seagreen;
     padding: 10px;
     margin: 20px;
+    width:450px;
 }
 
     .add_new_prod_sec input {
         margin-right: 10px;
-        height: 25px;
+        margin-top: 10px;
+        height: 50px;
+        width: 400px;
+        border: solid black 1px;   
     }
 
 
-
-.prod_table {
-    width: 1400px;
-    border: solid black 1px;
-    padding: 50px;
-    text-align: center;
-
+.edit_prod_sec input  {
+    margin-right: 10px;
+    margin-top: 10px;
+    height: 50px;
+    width: 400px;
 }
-    .prod_table tr:hover {
-        background-color: lightgray;
-    }
+    .tbl_data {
+    width: 200px;
+    height: auto;
+}
+
+.prod_table{
+
+    width:1700px;
+    border: solid black 2px;
+    
+}
+
+.editable_table{
+
+    position:fixed;
+    background-color:grey;
+    height: auto;
+}
+.prod_table thead {
+    width: auto;
+}
+.prod_table td {
+    width: 300px auto;
+    height: auto;
+    border: double grey 1px;
+    padding: 10px;
+    text-align: center;
+}
+
+.vendor_table td {
+    width: auto;
+    height: 80px;
+    border: double green 1px;
+    padding: 10px;
+    text-align: center;
+}
 
 
+.vendor_List {
+    margin-left: 100px;
+    width: auto;
+    border: solid black 1px;
+    padding: 20px;
+}
 
-    .Products_List {
-        width: 1400px;
-        border: solid black 1px;
-        padding: 20px;
-        margin-left: 220px;
-    }
+
+.Products_List {
+    margin-left: 100px;
+    width: auto;
+    border: solid black 1px;
+    padding: 20px;
+}
 
     .Products_List ul li {
         list-style:outside;   
     }
+
+
+input {
+    border-top-left-radius: 10px;
+    border-end-end-radius: 10px;
+    height: 50px;
+    margin-right: 10px;
+    width: 250px;
+}
