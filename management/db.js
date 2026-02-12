@@ -7,9 +7,12 @@ const { Pool } = pkg;
 
 
 const app = express();
+
 const port = 5552;
 
 // Middleware
+app.use(express.json({ limit: "20mb" }));
+
 app.use(cors());
 app.use(express.json());
 
@@ -64,6 +67,32 @@ app.post('/createuser', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+
+
+// CREATE - Add new user from live feed
+app.post('/createuserr', async (req, res) => {
+    try {
+        const { title, description, price, vendor, category } = req.body;
+        const count = req.body.rating?.count;
+        const result = await pool.query(
+            'INSERT INTO product(name,description,price,vendor,category,quantity)   VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [title, description, price, vendor, category,count]
+
+
+        );
+
+
+        console.log("Inside CREATE AT: " + timeStamp());
+
+
+        res.status(201).json({ success: true, data: result.rows[0] + " TESTSSSS" });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
 
 // READ - Get all users
 app.get('/userr', async (req, res) => {
@@ -147,7 +176,9 @@ app.delete('/api/deleteuser/:id', async (req, res) => {
 
 
 
-
+///                         BULK OPERATIONS
+///                         BULK OPERATIONS
+///                         BULK OPERATIONS
 
 
 app.post('/api/bulk-insert', async (req, res) => {
@@ -161,9 +192,9 @@ app.post('/api/bulk-insert', async (req, res) => {
         const inserted = [];
         for (const row of rows) {
             const result = await pool.query(
-                `INSERT INTO product(name, description, sku, price, delivery_cost, mark_up, vat, quantity, category, vendor)
-         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-                [row.name, row.description, row.sku, row.retail_price, row.delivery_cost, row.mark_up, row.vat, row.quantity, row.category, row.vendor]
+                `INSERT INTO product(name, description, sku, price, delivery_cost, mark_up, vat, quantity, category, vendor,created_on,detailed_description)
+                               VALUES($1,    $2,        $3,   $4,     $5,         $6,    '15.00', $8,       $9,       $10,    NOW(),$11) RETURNING *`,
+                [row.name, row.description, row.sku, row.price, row.delivery_cost, row.mark_up, row.vat, row.quantity, row.categoriestree, row.vendor,row.shortdesc]
             );
             inserted.push(result.rows[0]);
         }
@@ -285,6 +316,11 @@ app.get("/api/db-columns", async (req, res) => {
 
 
 
+
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
+
+
+
+

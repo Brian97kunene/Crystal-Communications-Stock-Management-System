@@ -4,7 +4,11 @@
 }
 
 .logo {
+<<<<<<< HEAD
     margin-left: 00px;
+=======
+    margin-left: 400px;
+>>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
 }
 
 .main {
@@ -17,21 +21,17 @@
     list-style-type: none;
 }
 
+
 button {
-    
-
-
-    margin-top: 20px; 
-        padding: 10px 20px;
-        background: #4CAF50; 
-        color: white;
-        border: none; 
-        cursor: pointer;
-
-
-
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
 }
 
+<<<<<<< HEAD
 .Products_List h2 {
     display:block;
 
@@ -62,8 +62,14 @@ button {
     justify-content: right;
 }
 .search_btn {
-
     margin-right: unset;
+}
+.search_area {
+
+
+    display: flex;
+    justify-content: flex-end;
+
 }
 
 
@@ -131,13 +137,65 @@ button {
     text-align: center;
 }
 
-.vendor_table td {
-    width: auto;
-    height: 80px;
-    border: double green 1px;
+.prod_table_ {
+    margin-left: 100px;
+    width: 700px;
+    height: auto;
+    border-bottom: double blue 1px;
     padding: 10px;
     text-align: center;
 }
+
+.prod_table_2 {
+    margin-left: 100px;
+    width: 300px auto;
+    height: auto;
+    border-bottom: double blue 1px;
+    border-left: double black 1px;
+    padding: 10px;
+    text-align: center;
+}
+
+
+    .prod_table_2 td {
+        width: 500px;
+        height: auto;
+        border-bottom: solid black 1px;
+        border-right: solid black 1px;
+        padding: 10px 0 50px 10px;
+        margin-left: 150px;
+        margin-top: 150px;
+        text-align: left;
+    }
+
+.Live_Feed {
+    margin-left: 50px;
+    margin-top: 100px;
+    border: 1px double black;
+    width: auto;
+    padding:10px;
+    border-radius: 10px;
+}
+
+button {
+    border-radius: 10px;
+    
+}
+
+    .prod_table_ td img {
+        display: flex;
+        justify-content: flex-end;
+        position:relative;
+
+    }
+
+    .vendor_table td {
+        width: auto;
+        height: 80px;
+        border-bottom: double green 1px;
+        padding: 10px;
+        text-align: center;
+    }
 
 
 .vendor_List {

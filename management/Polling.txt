@@ -1,0 +1,99 @@
+
+
+code for POLLING
+
+
+async function pollApi(url, interval, timeout) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === "completed") {
+      console.log("Task completed:", data);
+      return data;
+    }
+    if (data.status === "failed") {
+      throw new Error("Task failed");
+    }
+
+    await new Promise(r => setTimeout(r, interval));
+  }
+  throw new Error("Polling timed out");
+}
+
+
+
+
+
+
+
+
+
+POLL AND UPDATE DATABASE
+
+
+
+const fetch = require("node-fetch");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "mydb",
+  password: "secret",
+  port: 5432,
+});
+
+async function pollApi() {
+  try {
+    const res = await fetch("https://api.example.com/feed");
+    const data = await res.json();
+
+    for (const item of data) {
+      await pool.query(
+        `INSERT INTO feed_items (id, payload, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (id) DO UPDATE SET payload = $2, updated_at = NOW()`,
+        [item.id, JSON.stringify(item)]
+      );
+    }
+
+    console.log("Synced:", data.length, "items");
+  } catch (err) {
+    console.error("Polling error:", err.message);
+  }
+}
+
+// Run every 30 seconds
+setInterval(pollApi, 30000);
+
+
+
+
+
+****************************************************
+****************************************************
+****************************************************
+
+
+INSERT INTO feed_items (id, status, type, metadata, updated_at)
+VALUES ($1, $2, $3, $4, NOW())
+ON CONFLICT (id) DO UPDATE
+SET status = EXCLUDED.status,
+    type = EXCLUDED.type,
+    metadata = EXCLUDED.metadata,
+    updated_at = NOW();
+
+
+
+    await pool.query(
+  `INSERT INTO feed_items (id, status, type, metadata, updated_at)
+   VALUES ($1, $2, $3, $4, NOW())
+   ON CONFLICT (id) DO UPDATE
+   SET status = EXCLUDED.status,
+       type = EXCLUDED.type,
+       metadata = EXCLUDED.metadata,
+       updated_at = NOW()`,
+  [item.id, item.status, item.type, JSON.stringify(item.metadata)]
+);

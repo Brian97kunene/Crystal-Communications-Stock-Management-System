@@ -20,6 +20,7 @@ function CsvDropEditor() {
 
 
 
+
     // Fetch database columns on mount
     useEffect(() => {
         const fetchDbColumns = async () => {
@@ -62,82 +63,82 @@ function CsvDropEditor() {
                         // Update progress based on rows parsed
                         // (approximate since we don’t know total rows until complete) 
                         setProgress((prev) => Math.min(prev + 1, 100));
-                        
+
                     }, complete: (result) => {
                         const parsedData = Array.isArray(result.data) ? result.data : [];
-                       
+
                         console.log(parsedData);
-                    
+
                         setLoading(false);
                         setProgress(100);
                         if (result.data.length > 0) { compareColumns(Object.keys(parsedData[0])); }
                     },
                 });
             } else if (file.name.endsWith(".xml")) {
-                
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const parser = new DOMParser();
-                        const xmlDoc = parser.parseFromString(event.target.result, "application/xml");
 
-                        if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
-                            alert("Invalid XML file format.");
-                            return;
-                        }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(event.target.result, "application/xml");
 
-                        // Get all ProductInformationForWeb nodes
-                        const productNodes = Array.from(xmlDoc.getElementsByTagName("ProductInformationForWeb"));
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                        alert("Invalid XML file format.");
+                        return;
+                    }
 
-                        const parsedRows = productNodes.map(node => {
-                            const obj = {};
+                    // Get all ProductInformationForWeb nodes
+                    const productNodes = Array.from(xmlDoc.getElementsByTagName("ProductInformationForWeb"));
 
-                            Array.from(node.children).forEach(child => {
-                                if (child.children.length === 0) {
-                                    // Simple element
-                                    obj[child.tagName] = child.textContent;
+                    const parsedRows = productNodes.map(node => {
+                        const obj = {};
+
+                        Array.from(node.children).forEach(child => {
+                            if (child.children.length === 0) {
+                                // Simple element
+                                obj[child.tagName] = child.textContent;
+                            } else {
+                                // Nested element
+                                if (child.tagName === "ProductDimensions") {
+                                    Array.from(child.children).forEach(dim => {
+                                        obj[`ProductDimensions_${dim.tagName}`] = dim.textContent;
+                                    });
+                                } else if (child.tagName === "PublishingCategory") {
+                                    Array.from(child.children).forEach(cat => {
+                                        obj[`PublishingCategory_${cat.tagName}`] = cat.textContent;
+                                    });
+                                } else if (child.tagName === "WarehouseStockLevels") {
+                                    // Flatten each PortalWarehouseStockLevel
+                                    Array.from(child.getElementsByTagName("PortalWarehouseStockLevel")).forEach((ws, idx) => {
+                                        Array.from(ws.children).forEach(wsChild => {
+                                            obj[`Warehouse_${idx + 1}_${wsChild.tagName}`] = wsChild.textContent;
+                                        });
+                                    });
                                 } else {
-                                    // Nested element
-                                    if (child.tagName === "ProductDimensions") {
-                                        Array.from(child.children).forEach(dim => {
-                                            obj[`ProductDimensions_${dim.tagName}`] = dim.textContent;
-                                        });
-                                    } else if (child.tagName === "PublishingCategory") {
-                                        Array.from(child.children).forEach(cat => {
-                                            obj[`PublishingCategory_${cat.tagName}`] = cat.textContent;
-                                        });
-                                    } else if (child.tagName === "WarehouseStockLevels") {
-                                        // Flatten each PortalWarehouseStockLevel
-                                        Array.from(child.getElementsByTagName("PortalWarehouseStockLevel")).forEach((ws, idx) => {
-                                            Array.from(ws.children).forEach(wsChild => {
-                                                obj[`Warehouse_${idx + 1}_${wsChild.tagName}`] = wsChild.textContent;
-                                            });
-                                        });
-                                    } else {
-                                        // Generic flatten for other nested nodes
-                                        Array.from(child.children).forEach(sub => {
-                                            obj[`${child.tagName}_${sub.tagName}`] = sub.textContent;
-                                        });
-                                    }
+                                    // Generic flatten for other nested nodes
+                                    Array.from(child.children).forEach(sub => {
+                                        obj[`${child.tagName}_${sub.tagName}`] = sub.textContent;
+                                    });
                                 }
-                            });
-
-
-                            setLoading(false);
-                            setProgress(100);
-                            return obj;
+                            }
                         });
 
-                        setRows(Array.isArray(parsedRows) ? parsedRows : []);
 
-                        if (parsedRows.length > 0) {
-                            compareColumns(Object.keys(parsedRows[0]));
-                        }
-                    };
-                    reader.readAsText(file);
-                }
+                        setLoading(false);
+                        setProgress(100);
+                        return obj;
+                    });
+
+                    setRows(Array.isArray(parsedRows) ? parsedRows : []);
+
+                    if (parsedRows.length > 0) {
+                        compareColumns(Object.keys(parsedRows[0]));
+                    }
+                };
+                reader.readAsText(file);
+            }
 
 
-             else {
+            else {
                 alert("Unsupported file type. Please drop a CSV or XML file.");
             }
         }
@@ -224,7 +225,7 @@ function CsvDropEditor() {
         if (rows.length > 0) {
             compareColumns(Object.keys(rows[0]));
         }
-    }, rows);
+    }, []);
 
 
 
@@ -270,19 +271,12 @@ function CsvDropEditor() {
     // Apply manual mappings to rows before insertion
 
 
-    const applyMappings = (rows, manualMappings) => {
-        return rows.map(row => {
-            const newRow = {};
-            Object.entries(row).forEach(([fileCol, val]) => {
-                const targetCol = manualMappings[fileCol] || fileCol;
-                newRow[targetCol] = val;
-            });
-            return newRow;
-        });
-    };
 
-    const insertRowsToDb = async () => {
-        const mappedRows = applyMappings(rows, manualMappings);
+
+    const insertRowsToDb = async (mappedRows) => {
+
+
+
 
         try {
             const response = await fetch("http://localhost:5552/api/bulk-insert", {
@@ -294,6 +288,7 @@ function CsvDropEditor() {
             const result = await response.json();
             if (result.success) {
                 alert("Rows inserted successfully!");
+                console.log("Rows to add:  " + JSON.stringify(mappedRows));
             } else {
                 alert("Failed to insert rows.");
                 console.log(result);
@@ -305,20 +300,6 @@ function CsvDropEditor() {
 
 
 
-    return (
-        <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            style={{
-                border: "2px dashed #333",
-                padding: "20px",
-                width: "auto",
-                margin: "20px auto",
-                marginLeft: "100px",
-                textAlign: "center",
-                background: "#fafafa",
-            }}
-        >
 
 
 
@@ -327,217 +308,261 @@ function CsvDropEditor() {
 
 
 
-            <p>Drag & Drop a CSV or XML file here</p>
-            {fileName && <h4>File: {fileName}</h4>}
 
-            {matchedColumns.length > 0 && (
-                <div style={{ margin: "10px 0", color: "green" }}>
-                    ✅ Matched Columns: {matchedColumns.join(", ")}
-                </div>
-            )}
-            {/* Loading animation + progress bar */}
-            {loading && (
-                <div style={{ margin: "20px 0" }}>
-                    <div className="spinner" style={{ border: "4px solid #f3f3f3", borderTop: "4px solid #3498db", borderRadius: "50%", width: "30px", height: "30px", animation: "spin 1s linear infinite", margin: "0 auto" }}></div>
-                    <div style={{ marginTop: "10px", width: "100%", background: "#ddd", borderRadius: "5px", }}>
-                        <div style={{ width: `${progress}%`, height: "10px", background: "#4CAF50", borderRadius: "5px", transition: "width 0.3s ease" }}></div>
+
+    const handleInsert = () => {
+        // Map selected rows with manual column mappings
+        const rowsToInsert = selectedRows.map((i) => {
+            const row = rows[i];
+            const mappedRow = {};
+
+            Object.keys(row).forEach((fileCol) => {
+                const dbCol = manualMappings[fileCol];
+                if (dbCol) {
+                    mappedRow[dbCol] = row[fileCol];
+                }
+            });
+
+            return mappedRow;
+        });
+
+        // Call your DB insert function
+        insertRowsToDb(rowsToInsert);
+    };
+
+
+
+    // PAGINATION
+    // PAGINATION
+    // PAGINATION
+
+
+
+
+        return (
+            <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                style={{
+                    border: "2px dashed #333",
+                    padding: "20px",
+                    width: "700px",
+                    margin: "20px auto",
+                    marginLeft: "100px",
+                    textAlign: "center",
+                    background: "#fafafa",
+                }}
+            >
+
+
+
+
+
+
+
+
+                <p>Drag & Drop a CSV or XML file here</p>
+                {fileName && <h4>File: {fileName}</h4>}
+
+                {matchedColumns.length > 0 && (
+                    <div style={{ margin: "10px 0", color: "green" }}>
+                        ✅ Matched Columns: {matchedColumns.join(", ")}
                     </div>
-                    <p>{progress}%</p>
-                </div>
-            )}
-
-          
-
-            {nearMatchedColumns.length > 0 && (
-                <div style={{ margin: "10px 0", color: "blue" }}>
-                    🔍 Suggested Near Matches:
-                    <ul>
-                        {nearMatchedColumns.map((m, idx) => (
-                            <li key={idx}>
-                                File column <b>{m.fileCol}</b> ≈ DB column <b>{m.dbCol}</b> (score: {m.score.toFixed(2)})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+                )}
+                {/* Loading animation + progress bar */}
+                {loading && (
+                    <div style={{ margin: "20px 0" }}>
+                        <div className="spinner" style={{ border: "4px solid #f3f3f3", borderTop: "4px solid #3498db", borderRadius: "50%", width: "30px", height: "30px", animation: "spin 1s linear infinite", margin: "0 auto" }}></div>
+                        <div style={{ marginTop: "10px", width: "100%", background: "#ddd", borderRadius: "5px", }}>
+                            <div style={{ width: `${progress}%`, height: "10px", background: "#4CAF50", borderRadius: "5px", transition: "width 0.3s ease" }}></div>
+                        </div>
+                        <p>{progress}%</p>
+                    </div>
+                )}
 
 
 
-            {rows.length > 0 && (
-                <>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            marginBottom: "10px",
-                            padding: "8px",
-                            width: "100%",
-                            border: "1px solid #ccc",
-                        }}
-                    />
+                {nearMatchedColumns.length > 0 && (
+                    <div style={{ margin: "10px 0", color: "blue" }}>
+                        🔍 Suggested Near Matches:
+                        <ul>
+                            {nearMatchedColumns.map((m, idx) => (
+                                <li key={idx}>
+                                    File column <b>{m.fileCol}</b> ≈ DB column <b>{m.dbCol}</b> (score: {m.score.toFixed(2)})
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+
+
+                {rows.length > 0 &&
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                marginBottom: "10px",
+                                padding: "8px",
+                                width: "100%",
+                                border: "1px solid #ccc",
+                            }}
+                        />
 
 
 
 
-                    {rows.length > 0 && (
-                        <table>
-                            <thead>
-                                <tr>
-                                    {Object.keys(rows[0]).map((fileCol, index) => (
-                                        <th key={index}>
-                                            {fileCol}
-                                            <div>
-                                                <select
-                                                    value={manualMappings[fileCol] || ""}
-                                                    onChange={(e) =>
-                                                        setManualMappings((prev) => ({
-                                                            ...prev,
-                                                            [fileCol]: e.target.value,
-                                                        }))
-                                                    }
+                        {rows.length > 0 && <div>
+
+
+
+
+
+
+
+                            <table style={{ width: "100%", marginTop: "10px" }}>
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        {Object.keys(rows[0]).map((col, index) => (
+                                            <th
+                                                key={index}
+                                                style={{
+                                                    border: "1px solid black",
+                                                    padding: "8px",
+                                                    background: dbColumns.includes(col)
+                                                        ? "#c8e6c9"
+                                                        : "#ddd",
+                                                }}
+                                            >
+                                                {col}<br />
+                                                <select value={manualMappings[col] || ""} onChange={(e) =>
+                                                    setManualMappings((prev) => ({
+                                                        ...prev,
+                                                        [col]: e.target.value,
+                                                    }))
+                                                }
                                                 >
+
                                                     <option value="">-- Map to DB column --</option>
                                                     {dbColumns.map((dbCol) => (
                                                         <option key={dbCol} value={dbCol}>
                                                             {dbCol}
                                                         </option>
                                                     ))}
+
                                                 </select>
-                                            </div>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredRows.map((row, i) => (
-                                    <tr key={i}>
-                                        <td>
-                                            <input type="checkbox" checked={selectedRows.includes(i)} onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedRows((prev) => [...prev, i]);
-                                                } else {
-                                                    setSelectedRows((prev) => prev.filter((idx) => idx !== i));
-                                                }
-                                            }}
-                                            />
-                                        </td>
-                                        {Object.entries(row).map(([colKey, val], j) => (
-                                            <td key={j}>
-                                                <input
-                                                    type="text"
-                                                    value={val}
-                                                    onChange={(e) => handleCellChange(i, colKey, e.target.value)}
-                                                />
-                                            </td>
+                                            </th>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody>
+                                    {filteredRows.map((row, i) => (
+                                        <tr key={i}>
 
-                    <button
-                        onClick={insertRowsToDb}
-                        style={{
-                            marginTop: "20px",
-                            padding: "10px 20px",
-                            background: "#673AB7",
-                            color: "white",
-                            border: "none",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Insert Mapped Columns as Rows into DB
-                    </button>
-
-
-
-
-
-
-                    <table style={{ width: "100%", marginTop: "10px" }}>
-                        <thead>
-                            <tr>
-                                {Object.keys(rows[0]).map((col, index) => (
-                                    <th
-                                        key={index}
-                                        style={{
-                                            border: "1px solid black",
-                                            padding: "8px",
-                                            background: dbColumns.includes(col)
-                                                ? "#c8e6c9"
-                                                : "#ddd",
-                                        }}
-                                    >
-                                        {col}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRows.map((row, i) => (
-                                <tr key={i}>
-                                    {Object.entries(row).map(([colKey, val], j) => (
-                                        <td
-                                            key={j}
-                                            style={{
-                                                border: "1px solid black",
-                                                padding: "8px",
-                                            }}
-                                        >
-                                            <input
-                                                className="tbl_data"
-                                                type="text"
-                                                value={val}
-                                                onChange={(e) =>
-                                                    handleCellChange(i, colKey, e.target.value)
-                                                }
-                                            />
-                                        </td>
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedRows.includes(i)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedRows((prev) => [...prev, i]);
+                                                        } else {
+                                                            setSelectedRows((prev) => prev.filter((idx) => idx !== i));
+                                                        }
+                                                    }}
+                                                />
+                                            </td>
+                                            {Object.entries(row).map(([colKey, val], j) => (
+                                                <td
+                                                    key={j}
+                                                    style={{
+                                                        border: "1px solid black",
+                                                        padding: "8px",
+                                                    }}
+                                                >
+                                                    <input
+                                                        className="tbl_data"
+                                                        type="text"
+                                                        value={val}
+                                                        onChange={(e) =>
+                                                            handleCellChange(i, colKey, e.target.value)
+                                                        }
+                                                    />
+                                                </td>
+                                            ))}
+                                        </tr>
                                     ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+
+
+                                </tbody>
+                            </table>
+
+
+                         
+
+
+                            <button
+                                onClick={handleInsert}
+                                style={{
+                                    marginTop: "20px",
+                                    padding: "10px 20px",
+                                    background: "#673AB7",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Insert Mapped Columns as Rows into DB
+                            </button>
 
 
 
 
 
+                            <button
+                                onClick={exportCsv}
+                                style={{
+                                    marginTop: "20px",
+                                    padding: "10px 20px",
+                                    background: "#4CAF50",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Export Edited CSV
+                            </button>
+                        </div>
+                        }
 
-                    <button
-                        onClick={exportCsv}
-                        style={{
-                            marginTop: "20px",
-                            padding: "10px 20px",
-                            background: "#4CAF50",
-                            color: "white",
-                            border: "none",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Export Edited CSV
-                    </button>
-                </>
-            )}
 
-            <button
-                onClick={updateDatabase}
-                style={{
-                    marginTop: "20px",
-                    padding: "10px 20px",
-                    background: "#2196F3",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                }}
-            >
-                Update Database
-            </button>
-        </div>
-    );
-}
+
+                        <button
+                            onClick={updateDatabase}
+                            style={{
+                                marginTop: "20px",
+                                padding: "10px 20px",
+                                background: "#2196F3",
+                                color: "white",
+                                border: "none",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Update Database
+                        </button>
+                    </div>
+
+
+
+
+                }
+            </div>);
+
+    }
+
 
 export default CsvDropEditor;

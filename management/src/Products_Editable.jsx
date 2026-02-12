@@ -232,7 +232,7 @@ const UserList = () => {
 
           
 
-            <table className="prod_table"  Id="prod_table">
+                <table className="table table-striped"  Id="prod_table">
                 <thead >
                     <tr>
                         

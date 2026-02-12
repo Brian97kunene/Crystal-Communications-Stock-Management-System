@@ -10,6 +10,7 @@ import File from "./ReadAFile.jsx";
 const CrystalCommunications = () => {
     //
     const [product, setProduct] = useState({ name: "", description: "", sku: "", price: "", delivery_cost: "", mark_up: "", vat: "", vendor: "" ,category:"",quantity:0});
+    const [searchproduct, setSearchProduct] = useState({ name: "", description: "", sku: "", price: "", delivery_cost: "", mark_up: "", vat: "", vendor: "" ,category:"",quantity:0});
     const [isVisible, setVisible] = useState(false);
     const [isVisible0, setVisible0] = useState(false);
 
@@ -55,38 +56,12 @@ const CrystalCommunications = () => {
             }
             const data = await response.json();
 
-            const row = tbl.insertRow();
+            setSearchProduct(data.data);
 
-            if (row == 0) {
-                const header = tbl.createTHead();
-                header.insertCell().innerText = "ID";
-                header.insertCell().innerText = "PRODUCT NAME";
-                header.insertCell().innerText = "SKU";
-                header.insertCell().innerText = "DESCRIPTION";
-                header.insertCell().innerText = "PRICE";
-                header.insertCell().innerText = "DELIVERY COST";
-                header.insertCell().innerText = "MARK UP";
-                header.insertCell().innerText = "VAT";
-                header.insertCell().innerText = "CATEGORY";
-                header.insertCell().innerText = "QUANTITY";
-                header.insertCell().innerText = "VENDOR";
+           
 
-                header.insertRow(0);
-            }
-            row.insertCell().innerText = data.data.sku;
-            row.insertCell().innerText = data.data.name;
-            row.insertCell().innerText = data.data.description;
-            row.insertCell().innerText = data.data.price;
-            row.insertCell().innerText = data.data.delivery_cost;
-            row.insertCell().innerText = data.data.mark_up;
-            row.insertCell().innerText = data.data.vat;
-            row.insertCell().innerText = data.data.category;
-            row.insertCell().innerText = data.data.quantity;
-            row.insertCell().innerText = data.data.vendor;
-
-
-
-
+         
+           
 
             console.log("Fetched data:", data.data);
 
@@ -114,9 +89,24 @@ const CrystalCommunications = () => {
 
             }}>Search Products</button>
 
-            {isVisible && < div class="add_new_prod_sec">
-                <input type="text" className="add_new_sec" value={product.name} id="prod_name" placeholder="Product Name" onChange={(e) => setProduct({ ...product, name: e.target.value })} /><br/>
-                <input type="text" className="add_new_sec" id="prod_desc" value={product.description} placeholder="Product Description" onChange={(e) => setProduct({ ...product, description: e.target.value })} /><br />
+            {searchproduct > 0 && 
+
+
+                <form onSubmit={handleSubmit}> {
+                    searchproduct.map((key) => (
+                        <div key={key}>
+                            <label>{key}</label>
+                            <input type="text" name={key} value={searchproduct[key]} />
+                        </div>))}
+                    <button type="submit">Save</button>
+                </form>
+            }
+
+
+
+            {isVisible && < div class="d-inline p-2 bg-primary text-white">
+                <input type="text" className="form-control" value={product.name} id="prod_name" placeholder="Product Name" onChange={(e) => setProduct({ ...product, name: e.target.value })} /><br/>
+                <input type="text" class="form-control" id="prod_desc" value={product.description} placeholder="Product Description" onChange={(e) => setProduct({ ...product, description: e.target.value })} /><br />
                 <input type="text" id="prod_sku" className="add_new_sec" value={product.sku} placeholder="Product SKU" onChange={(e) => setProduct({ ...product, sku: e.target.value })} /><br />
                 <input type="text" id="prod_price" className="add_new_sec" value={product.price} placeholder="Product price" onChange={(e) => setProduct({ ...product, price: e.target.value })} /><br />
                 <input type="text" id="prod_delivery_cost" className="add_new_sec" value={product.delivery_cost} placeholder="Product delivery_cost" onChange={(e) => setProduct({ ...product, delivery_cost: e.target.value })} /><br />
@@ -141,7 +131,7 @@ const CrystalCommunications = () => {
                     <input type="text" id="sku" />
                     <button onClick={fetchData}>Go</button>
 
-
+                    {<button>Edit</button>}
 
                 </div>}
 
