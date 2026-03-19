@@ -2,6 +2,8 @@ import express from 'express';
   
 import cors from 'cors';
 import pkg from "pg";
+import os from "os";
+import { join } from 'path';
 
 const { Pool } = pkg;
 
@@ -16,6 +18,14 @@ app.use(express.json({ limit: "20mb" }));
 app.use(cors());
 app.use(express.json());
 
+app.use(cors({ origin: 'http://localhost:5173' }));
+
+
+
+
+
+
+
 // PostgreSQL connection
 const pool = new Pool({
     host: 'localhost',
@@ -26,14 +36,108 @@ const pool = new Pool({
 });
 
 
+const BuildQuery = (dat, data) => {
+
+    var query1 = "";
+
+    if (dat == "insert") {
+
+
+        data.forEach((i, indx) => {
+
+            if (indx === data.length-1) {
+
+                console.log(i);
+                query1 += `('${JSON.stringify(Object.keys(i)).replace("{", "").replace("}", "").replace("]", "").replace("[", "")}')`
+            }
+            else {
+
+                query1 += `('${JSON.stringify(Object.values(i)).replace("{", "").replace("}", "").replace("]", "").replace("[", "")}'),`
+
+            }
+
+
+            }
+        );
+    }
+    else if (dat == "update") {
+
+
+        query1 = `UPDATE vendor SET name = 'MTBTTF' where name='${JSON.stringify(data)}' RETURNING *;`;
+    }
+    return query1;
+
+
+}
+
+
+function SyncTransaction(query, query1, client,x) {
+    // Express.js Backend Route
+    app.post('/api/purchase', async (req, res) => {
+
+
+        try {
+            await client.query('BEGIN'); // 1. Start Transaction
+
+
+
+            // 2. Deduct balance from user
+            
+            await client.query(BuildQuery("insert", query))
+            await client.query('Savepoint firstpoint;'); // 4. Save changes
+
+
+            // 3. Record the order
+      
+
+            res.status(200).send('Transaction successful');
+
+         
+            client.release(); // Always release the client back to the pool
+            
+
+
+        } catch (error) {
+            await client.query('ROLLBACK'); // 5. Undo everything on error
+            res.status(500).send(`Transaction failed: ${error.message}`);
+
+        }
+    });
+}
 function  timeStamp() {
     var f = new Date();
     var datee = f.getDate();
+    var month = f.getMonth();
+    var year = f.getFullYear();
     var ff = f.getHours();
     var fff = f.getMinutes();
 
-    return `${datee} - ${ff}:${fff}`;
 
+    var t = os.totalmem() / 1000000000;
+
+    var timee = "";
+
+
+    if (ff < 9) {
+        if (fff < 9) {
+
+            timee = `0${ff}:0${fff} - ${datee}/${month}/${year}`;
+            
+        }
+    }
+    else {
+
+        if (fff < 9) {
+            timee = `${ff}:0${fff} -  ${datee}/${month}/${year}`;
+           
+        }   
+        else {
+            timee = `${ff}:${fff} -  ${datee}/${month}/${year}`;
+           
+        }
+    }
+
+    return timee + ` TOTAL MEMORY: ${t.toFixed(2)}GB`;
 
 }
 
@@ -46,6 +150,51 @@ pool.connect((err, client, release) => {
         release();
     }
 });
+
+
+
+app.post('/api/purchase', async (req, res) => {
+    const client = await pool.connect(); // Get a client from the pool
+    const { query, query1 } = req.body; // Expecting SQL queries in request body
+    try {
+        SyncTransaction(query, query1,client);
+;
+    }
+    catch (error) {
+        res.status(500).send(`Transaction failed: ${error.message}`);
+
+    }
+
+
+
+    });
+app.post('/api/getmarkups', async (req, res) => {
+    const client = await pool.connect(); // Get a client from the pool
+    const  supplier_code  = req.body; // Expecting SQL queries in request body
+    try {
+
+        console.log(supplier_code.code, " code");
+        await client.query(
+            `UPDATE product
+SET price_after_mark_up = (delivery_cost + price) * ((1 + (mark_up / 100.0)) * (1 + (vat / 100.0)))
+WHERE supplier_code = $1 RETURNING *; `
+            , [supplier_code.code]);
+
+
+        res.status(200).send(`Transaction failed: ${res.status}`);
+    }
+    catch (error) {
+        res.status(500).send(`Transaction failed: ${error.message}`);
+
+    }
+    finally {
+
+        client.release();
+    }
+
+
+
+    });
 
 // CREATE - Add new user
 app.post('/createuser', async (req, res) => {
@@ -76,7 +225,7 @@ app.post('/createuserr', async (req, res) => {
         const { title, description, price, vendor, category } = req.body;
         const count = req.body.rating?.count;
         const result = await pool.query(
-            'INSERT INTO product(name,description,price,vendor,category,quantity)   VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [title, description, price, vendor, category,count]
+            'INSERT INTO product(name,description,price,vendor,category,quantity,created_on,updated_on)   VALUES ($1,$2,$3,$4,$5,$6,now(),now()) RETURNING *', [title, description, price, vendor, category,count]
 
 
         );
@@ -94,28 +243,121 @@ app.post('/createuserr', async (req, res) => {
 
 
 
-// READ - Get all users
-app.get('/userr', async (req, res) => {
+// READ - Get all products count
+app.get('/getproductcount', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM product');
+        const result = await pool.query('SELECT count(*) as "total" FROM product');
 
-        console.log("Inside GET 10:20 AT: " + timeStamp());
+        console.log("Inside GET 'product' count AT: " + timeStamp());
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+// READ - Get all users with pagination
+app.get('/userr/:x', async (req, res) => {
+    try {
+        var {x} = req.params
+        const result = await pool.query(`SELECT * FROM product where  quantity >= 1 order by livefee_updated_on asc LIMIT 10 OFFSET ${x}`);
+
+        console.log("Inside GET 'product' AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// READ - Get single user
-app.get('/api/users/:id', async (req, res) => {
+
+
+// READ - Get all products
+app.get('/allproducts/', async (req, res) => {
+    try {
+        
+        const result = await pool.query(`SELECT * FROM product`);
+
+        console.log("Inside GET 'product' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+// READ - Get all users
+app.get('/getproduct/byname/:x', async (req, res) => {
+    try {
+        var { x} = req.params;
+
+        const result = await pool.query("SELECT * FROM product where name ilike  $1 ", ["%"+x+"%"]);
+
+        console.log("Inside GET 'getproduct' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.log(x+"    ");
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// READ - Get all users
+app.get('/getproduct/bysku/:x', async (req, res) => {
+    try {
+        var { x} = req.params;
+
+        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", ["%" + x+"%"]);
+
+        console.log("Inside GET 'getproduct' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.log(x+"    ");
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// READ - Get all products by supplier
+app.get('/getproduct/bysupplier/:x/:y', async (req, res) => {
+    try {
+        var { x,y} = req.params;
+
+        const result = await pool.query("SELECT * FROM product where supplier_code = $1 ", [x]);
+
+        console.log("Inside GET 'getproduct' by supplier_code AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.log(x+"    ");
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+
+
+// READ - Get last update
+app.get('/lastupdate', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT updated_on FROM product where updated_on is not null order by updated_on desc limit 1');
+
+        console.log("Inside GET last update timestamp AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// READ - Get products by supplier
+app.get('/api/getproducts/bysuppliercode/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query('SELECT * FROM product WHERE id = $1', [id]);
-        console.log("Inside GET by ID");
+        const result = await pool.query('SELECT * FROM product WHERE supplier_code = $1 ', [id]);
+        console.log("Supplier ", id);
+        console.log("products ", result.rows.length);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        res.json({ success: true, data: result.rows[0] });
+        res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -139,19 +381,23 @@ app.get('/api/sku/:sku', async (req, res) => {
 
 
 // UPDATE - Update user
-app.put('/updateuser/:id', async (req, res) => {
+app.post('/updateproducts/:sku', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, description, sku, retail_price, delivery_cost, mark_up, vat, quantity, category,vendor } = req.body;
+       
+        const rows = req.body.rows;
+        const sku = req.params;
+
+
+
         const result = await pool.query(
-            'UPDATE product SET name = $1, description = $2, sku = $3, price = $4, delivery_cost = $5 , mark_up = $6, vat = $7,quantity = $8,category = $9 ,vendor =$11 WHERE id = $10 RETURNING *',
-            [name, description, sku, retail_price, delivery_cost, mark_up, vat, quantity, category, id, vendor]
+            'UPDATE product SET  $2 ,updated_on = now() WHERE sku = $1 RETURNING *',
+            [sku, rows]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        console.log("Inside UPDATE, AT: " + timeStamp());
+        console.log("Inside UPDATE, AT: "+ timeStamp());
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {
         
@@ -159,11 +405,13 @@ app.put('/updateuser/:id', async (req, res) => {
     }
 });
 
-// DELETE - Delete user
-app.delete('/api/deleteuser/:id', async (req, res) => {
+
+
+// DELETE - Delete PRODUCT
+app.delete('/api/deleteuser/:sku', async (req, res) => {
     try {
-        const { id } = req.params;
-        const result = await pool.query('DELETE FROM product WHERE id = $1 RETURNING *', [id]);
+        const { sku } = req.params;
+        const result = await pool.query('DELETE FROM product WHERE sku = $1', [sku]);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
@@ -173,41 +421,473 @@ app.delete('/api/deleteuser/:id', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+// UPDATE  PRODUCT
+app.post('/api/updateproduct/:sku/:quantity', async (req, res) => {
+    try {
+        const { sku, quantity } = req.params;
+        const result = await pool.query('UPDATE FROM product SET quantity = $1 WHERE sku = $2', [quantity,sku]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'PRODUCT not found' });
+        }
+        console.log("Inside UPDATE PRODUCT By SKU, AT: " + timeStamp());
+        res.json({ success: true, message: 'Product Update', data: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 
 
-///                         BULK OPERATIONS
-///                         BULK OPERATIONS
-///                         BULK OPERATIONS
+///                         MAPPED BULK OPERATIONS
 
 
 app.post('/api/bulk-insert', async (req, res) => {
     try {
         const rows = req.body.rows;
+        const supplier = req.body.supply;
+        let status = null;
+        console.log("WEDCA :",supplier);
+        const supp_code = supplier.id;  
 
-        if (!Array.isArray(rows) || rows.length === 0) {
-            return res.status(400).json({ success: false, error: 'No rows provided' });
-        }
+        console.log("supplier of bulk:", req.body.supply);
+            console.log("bulk:",rows);
+        
+            
+        for (const row in rows) {
 
-        const inserted = [];
-        for (const row of rows) {
+            console.log("0000");
+            console.log(rows[row])
+           
+
             const result = await pool.query(
-                `INSERT INTO product(name, description, sku, price, delivery_cost, mark_up, vat, quantity, category, vendor,created_on,detailed_description)
-                               VALUES($1,    $2,        $3,   $4,     $5,         $6,    '15.00', $8,       $9,       $10,    NOW(),$11) RETURNING *`,
-                [row.name, row.description, row.sku, row.price, row.delivery_cost, row.mark_up, row.vat, row.quantity, row.categoriestree, row.vendor,row.shortdesc]
+                `INSERT INTO product (
+            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
+         )
+         VALUES (
+            $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8        
+         ) ON CONFLICT (sku)
+         DO  UPDATE
+         SET price = EXCLUDED.price
+            ,quantity = EXCLUDED.quantity
+            ,mark_up = EXCLUDED.mark_up
+         RETURNING*;`,
+                [
+                    rows[row].name,
+                    rows[row].description,
+                    rows[row].sku,
+                    rows[row].price,
+                    rows[row].delivery_cost,
+                    rows[row].mark_up,
+                    rows[row].quantity, // 7
+                  
+                    supp_code //12
+
+
+                ]
             );
-            inserted.push(result.rows[0]);
+            status = result.command; // "INSERT" or "UPDATE"
+            console.log("Last operation:", result.rows);
         }
 
-        console.log("Inserted rows:", inserted.length);
-        res.json({ success: true, data: inserted });
+        res.status(200).json({ success: true});
+
+        console.log("Last operation:", status);
+
+
+        
+
+
+
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+    }
+);
+
+
+///                         SYNTECH BULK OPERATIONS
+///                         SYNTECH BULK OPERATIONS
+/// 
+
+
+app.post('/api/bulk-update', async (req, res) => {
+    try {
+        const { rows, supply } = req.body;
+        const supp_code_id = supply.id;
+
+        console.log(`Starting bulk update for supplier: ${JSON.stringify(supp_code_id)}`);
+
+         //We use a map to create an array of promises
+        const updatePromises = rows.map(row => {
+            return pool.query(
+                `WITH updated AS (
+    UPDATE product
+    SET
+        price = $4,
+        quantity = $7,
+        delivery_cost = $5,
+        mark_up = $6,
+        -- Cast the unknown parameters to numeric to resolve the operator ambiguity
+        price_after_mark_up = ($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)),
+        updated_on = NOW()
+    WHERE sku = $3
+    RETURNING *
+)
+INSERT INTO product (
+    name, detailed_description, sku, price, delivery_cost,
+    mark_up, quantity, category, vendor, updated_on, created_on,
+    vat, description, supplier_code, price_after_mark_up
+)
+SELECT
+    $1, $2, $3, $4, $5, $6, $7, '', $9, NOW(), NOW(), 15, '', $8,
+    (($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)))
+WHERE NOT EXISTS (SELECT 1 FROM updated)
+RETURNING *;`,
+                [
+                    row.name || 'PRODUCT_ || id',
+                    row.description || '',
+                    row.sku,
+                    row.price || 0,
+                    row.delivery_cost || 0,
+                    row.mark_up || 0,
+                    row.quantity || 0,
+                    req.body.supply.id,
+                    req.body.supply.name
+                ]
+            );
+        });
+
+        // Execute all queries in parallel
+        await Promise.all(updatePromises);
+
+        res.status(200).json({ success: true, message: `Processed ${rows.length} rows.` });
+
+    } catch (error) {
+        console.error("Bulk update error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+//SYNTECH BULK OPERATIONS
+///                         SYNTECH BULK OPERATIONS
+///                         SYNTECH BULK OPERATIONS
+
+
+
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+
+
+
+
+
+app.delete('/api/syntech/bulk-delete', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+        const sup = req.body.supplier;
+        let status = null;
+        var t  = [];
+
+        var p = req.body.rows[0];
+        console.log("my rows: ", p.length);
+        console.log("my sup: ", sup);
+
+
+        for (const row of rows) {
+           // console.log(row);
+            const result = await pool.query(
+                `DELETE FROM product WHERE sku = $1 returning *; `,
+                [
+
+                    row.sku           //3
+
+
+                    //11 description
+                ]
+            );
+            t.push(row.sku);
+            status = result.command; // "INSERT" or "UPDATE"
+        }
+      //  console.log(t);
+        console.log("Last operation:", status);
+        console.log(rows.length);
+        res.json({ success: true, status });
     } catch (error) {
         console.error("Bulk insert error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
-;
 
+
+
+
+
+app.post('/api/syntech/bulk-insert', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+        const supp = req.body.supplier;
+        let status = null;
+
+
+        console.log(rows);
+            for (const row of rows) {
+                var qty = Number(Number(row.dbnstock) + Number(row.cptstock) + Number(row.jhbstock)) || 0;
+                //console.log(row);
+                const result = await pool.query(
+                    `INSERT INTO product (
+            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description, livefee_updated_on,supplier_code
+         )
+         VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 15.00, $11, $10,$12
+         ) on conflict (sku)
+         do nothing RETURNING*;`,
+                    [
+                        row.name,         //1
+                        row.description, //2  // detailed_description
+                        row.sku,            //3
+                        row.price,          //4
+                        row.delivery_cost,  //5
+                        row.recommended_margin, //6 // mark_up
+                        qty, //7 quantity
+                        row.categorytree,                           //8 category
+                        row.attributes?.brand || 'Unknown Vendor',                   //9 vendor
+                        row.last_modified,                       //10 livefee_updated_on
+                        row.shortdesc,
+                        supp.id                    ]
+                );
+
+                status = result.command; // "INSERT" or "UPDATE"
+
+            console.log("Last operation:", status);
+            
+
+        }
+        
+    
+
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Step 1: Begin transaction and perform CRUD
+app.put('/api/syntech/bulk-update', async (req, res) => {
+    
+    try {
+     
+        
+        const rows = req.body.rows;
+        const myresults = [];
+
+        console.log("typeof myrows: ");
+        console.log(rows[0]);
+
+        for (const row of rows) {
+           
+            
+
+           
+//         FROM FEED TO DATABASE 
+         
+
+        const result = await pool.query(
+            `UPDATE product  SET mark_up = $1, price=$2 where sku = $3 RETURNING *;
+           `, [row.recommended_margin, row.price, row.sku]
+
+
+        );
+       
+
+
+
+
+
+
+            myresults.push(result);
+
+        }
+            res.json({ success: true, message: 'Sync completed', data: myresults });
+    } catch (error) {
+        console.log("SERVER ERR: "+error);
+    }
+});
+app.put('/api/syntech/bulk-update-qty', async (req, res) => {
+    
+    try {
+     
+        
+        const rows = req.body.rows;
+        const myresults = [];
+
+        console.log("typeof myrows: ");
+        console.log(rows[0]);
+
+        for (const row of rows) {
+           
+            
+
+           
+//         FROM FEED TO DATABASE 
+         
+
+        const result = await pool.query(
+            `UPDATE product  SET quantity = $1 where sku = $2 RETURNING *;
+           `, [row.jhbstock + row.cptstock + row.dbnstock,row.sku]
+
+
+        );
+       
+
+
+
+
+
+
+            myresults.push(result);
+
+        }
+            res.json({ success: true, message: 'Sync completed', data: myresults });
+    } catch (error) {
+        console.log("SERVER ERR: "+error);
+    }
+});
+
+
+
+
+
+
+
+app.post('/api/bulk-upsert', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+        /// const supplier = req.body.supply;
+        let status = null;
+
+
+
+        //console.log("supplier of bulk:", req.body);
+        //console.log("bulk:", rows);
+
+
+
+
+
+
+
+
+        //var t = Object.keys(rows[0]);
+        //console.log(t);
+
+
+        
+
+
+        console.log(typeof Object.keys(rows[0]).join(",")," cols")
+       // res.status(200).json({ success: true });
+        //for (const row in rows) {
+
+        //    console.log("0000");
+
+
+        //    const result = await pool.query(
+        //        `INSERT INTO product (
+        //    name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
+        // )
+        // VALUES (
+        //    $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8
+        // ) ON CONFLICT (sku)
+        // DO  UPDATE
+        // SET price = EXCLUDED.price
+        //    ,quantity = EXCLUDED.quantity
+        //    ,mark_up = EXCLUDED.mark_up
+        // RETURNING*;`,
+        //        [
+        //            rows[row].name,
+        //            rows[row].description,
+        //            rows[row].sku,
+        //            rows[row].price,
+        //            rows[row].delivery_cost,
+        //            rows[row].mark_up,
+        //            rows[row].quantity, // 7
+
+        //            supp_code //12
+
+
+        //        ]
+        //    );
+            //status = result.command; // "INSERT" or "UPDATE"
+          //  console.log("Last operation:", result.rows);
+        //}
+
+
+       
+        res.status(200).json({ success: true });
+
+        console.log("Last operation:", status);
+
+
+
+
+
+
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+);
+
+
+
+
+
+
+///                         SYNTECH BULK OPERATIONS ABOVE 
+///                         SYNTECH BULK OPERATIONS ABOVE
+///                         SYNTECH BULK OPERATIONS ABOVE
+
+
+
+
+
+// Step 3: Commit after user confirms
+app.post('/commit/:transactionId', async (req, res) => {
+    const client = req.app.locals.transactions[req.params.transactionId];
+    if (!client) return res.status(400).json({ success: false, error: 'Invalid transaction ID' });
+
+    try {
+        await client.query('COMMIT');
+        client.release();
+        delete req.app.locals.transactions[req.params.transactionId];
+        res.json({ success: true, message: 'Transaction committed' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Step 4: Rollback if user cancels
+app.post('/rollback/:transactionId', async (req, res) => {
+    const client = req.app.locals.transactions[req.params.transactionId];
+    if (!client) return res.status(400).json({ success: false, error: 'Invalid transaction ID' });
+
+    try {
+        await client.query('ROLLBACK');
+        client.release();
+        delete req.app.locals.transactions[req.params.transactionId];
+        res.json({ success: true, message: 'Transaction rolled back' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+ 
 
 
 ///                         VENDOR ROUTES BELOW
@@ -230,12 +910,73 @@ app.get('/vendors', async (req, res) => {
 
 
 
+// READ - Get a vendor
+app.get('/vendor/:id', async (req, res) => {
+
+    const id = req.params;
+
+    try {
+        const result = await pool.query('SELECT * FROM vendor where id = $1',[id]);
+
+        console.log("Inside GET a vendor : " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+})
+// READ - Get a vendor by name
+app.get('/vendor/byname/:name', async (req, res) => {
+
+    const name = req.params.name;
+    var t = "";
+    console.log(name);
+    for (let i = 0; i <= name.length-1; i++) {
+
+
+        console.log(name[i])
+
+        if (name[i] != ",") {
+
+            t += name[i];
+        }
+        else {
+
+
+            t += " ";
+        }
+
+        console.log();
+    }
+
+
+    console.log("name :",t);
+
+
+    
+    console.log("**");
+    try {
+        const result = await pool.query('SELECT * FROM vendor where name ilike $1', [t]);
+
+        console.log("Inside : " + name);
+        console.log("res: " + result);
+        console.log("Inside GET a vendor by name : " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+})
+
+
+
 // CREATE - Add new VENDOR
 app.post('/createvendor', async (req, res) => {
     try {
-        const { name, contact, contact_name, email, address } = req.body;
+        const { name, phone, contact_name, email, address } = req.body.fom;
+        const  data_format  = req.body.dataformat;
+
+        
         const result = await pool.query(
-            'INSERT INTO vendor (name,contact,contact_name,email,address,created_at)  VALUES ($1,$2,$3,$4,$5,now()) RETURNING *', [name, contact, contact_name, email, address]
+            'INSERT INTO vendor (name,contact,contact_name,email,address,data_format,created_at)  VALUES ($1,$2,$3,$4,$5,$6,now()) RETURNING *', [name, phone, contact_name, email, address,data_format]
 
 
         );
@@ -286,13 +1027,14 @@ app.post("/api/update-csv", async (req, res) => {
 
 
 // UPDATE - Update vendor
-app.put('/updatevendor/:id', async (req, res) => {
+app.post('/updatevendor', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, contact, contact_name, email, address } = req.body;
+        
+        const { name, contact, contact_name, email, address, id, data_format } = req.body;
+
         const result = await pool.query(
-            'UPDATE vendor SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5 WHERE id = $6 RETURNING *',
-            [name, contact, contact_name, email, address, id]
+            'UPDATE vendor SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7  WHERE id = $6 RETURNING *',
+            [name, contact, contact_name, email, address, id,data_format]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
@@ -301,7 +1043,32 @@ app.put('/updatevendor/:id', async (req, res) => {
         console.log("Inside vendor UPDATE, AT: " + timeStamp());
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {
+        console.log(req.body);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
+
+
+app.delete('/deletevendor', async (req, res) => {
+    try {
+
+        const { rows } = req.body;
+
+        console.log(req.body.supps);
+
+       console.log(BuildQuery("insert",req.body.supps));
+
+        const result = await pool.query(
+            'DELETE FROM vendor WHERE name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7 , id = $6 RETURNING *',
+            //[name, contact, contact_name, email, address, id,data_format]
+        );
+      
+
+        console.log("Inside vendor DELETE, AT: " + timeStamp());
+        res.json({ success: true, data: result });
+    } catch (error) {
+        
         res.status(500).json({ success: false, error: error.message });
     }
 });

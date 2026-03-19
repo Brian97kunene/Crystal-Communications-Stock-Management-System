@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Pop from "./MyForm.jsx";
 import { CSSTransition } from 'react-transition-group';
 import './UsersStyle.css'
 
@@ -30,26 +31,28 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
     const handleUpdate = async () => {
         try {
             //const port = 5557;
-            const response = await fetch(`http://localhost:${port}/updateuser/${user.id}`, {
-                method: "PUT", // or "PATCH" if partial updates
+            const response = await fetch(`http://localhost:${port}/updateuser/${user.sku}`, {
+                method: "POST", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(form)
             });
-            console.log(form.data);
+            console.log("Updated: "+form.sku);
             //console.log(form.data);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                console.log(`HTTP error! Status: ${response.status}`);
             }
 
             const updatedUser = await response.json();
-            console.log("User updated:", updatedUser.data);
+            console.log("User updated:", updatedUser);
             onUpdated(updatedUser.data); // notify parent
             onClose(); // close editor
         } catch (error) {
-            console.error("Error updating user:", error);
+            
+            console.log(` ${error}`);
+            
         }
     };
 
@@ -58,8 +61,8 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
 // Component to delete a single product record
     const handleDelete = async () => {
         try {
-           // const port = 5555;
-            const response = await fetch(`http://localhost:` + {port} +`/deleteuser/${user.id}`, {
+          
+            const response = await fetch(`http://localhost:${port}/api/deleteuser/${user.sku}`, {
                 method: "DELETE", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -67,13 +70,12 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
                 body: JSON.stringify(form)
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+          
 
             const updatedUser = await response.json();
             console.log("Delete Complete:", updatedUser.data);
-            onUpdated(updatedUser.data); // notify parent
+            alert(`Delete Complete: ${form.sku}`);
+
             onClose(); // close editor
         } catch (error) {
             console.error("Delete Error", error);
@@ -84,96 +86,105 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
     return (
       
 
-        <div  >
-            <h3>Edit Product</h3>
-            <br />
+        <div style={{ width: "50%" }}>
+            <h3 >Edit Product</h3>
+          {/*  // Form to edit product details*/}
+          {/*  // Form to edit product details*/}
+          {/*  // Form to edit product details*/}
+          {/*  // Form to edit product details*/}
+            {/*  // Form to edit product details*/}
 
-            <span className="tbl_headers">Name</span>
-            <br /> 
-            <input
-                placeholder="Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-            <br/>
-            <span className="tbl_headers">Description</span>
-            <br /> 
-            <input
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
-            <br/>
-            <span className="tbl_headers">SKU</span>
-            <br /> 
-            <input
-                placeholder="SKU"
-                value={form.sku}
-                onChange={(e) => setForm({ ...form, sku: e.target.value })}
-            />
+            <table className="table table-striped" >
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>SKU</th>
+                        <th>Retail Price</th>
+                        <th>Mark Up</th>
+                        <th>Delivery Cost</th>
+                        
+                        <th>Quantity</th>
+                       
+                        <th>Vendor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <input
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                value={form.description}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                value={form.sku}
+                                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                value={form.retail_price}
+                                onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                value={form.mark_up}
+                                onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                value={form.delivery_cost}
+                                onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
+                            />
+                        </td>
 
-            <br/>
-            <span className="tbl_headers">Retail Price</span>
-            <br /> 
-            <input
-                placeholder="Retail Price"
-                value={form.retail_price}
-                onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
-            />
+                        <td>
+                            <input
+                                value={form.quantity}
+                                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                            />
+                        </td>
+         
+                        <td>
 
-            <br/>
-            <span className="tbl_headers">Mark Up</span>
-            <br /> 
-            <input
-                placeholder="Mark Up"
-                value={form.mark_up}
-                onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
-            />
-            <br/>
-            <span className="tbl_headers">Delivery Cost</span>
-            <br /> 
-            <input
-                placeholder="Delivery Cost"
-                value={form.delivery_cost}
-                onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
-            />
-            <br/>
-            <span className="tbl_headers">Tax</span>
-            <br /> 
-            <input
-                placeholder="Tax"
-                value={form.vat}
-                onChange={(e) => setForm({ ...form, vat: e.target.value })}/>
-            <br />
-            <span className="tbl_headers">Quantity</span><br />
-            <input
-                placeholder="Quantity"
-                value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-            <br />
-            <span className="tbl_headers">Category</span><br />
-            <input
-                placeholder="Category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })} />
 
-            <br />
-            <span className="tbl_headers">Vendor</span><br />
-            <select
-                value={form.vendor}
-                onChange={(e) => setForm({ ...form, vendor: e.target.value })}
-            >
-                <option value="">Select Vendor</option>
-                {vendors.map(v => (
-                    <option key={v.id} value={v.name}>{v.name}</option>
-                ))}
-            </select>
-            <br />
-            
+                            
 
-            <button onClick={handleUpdate}>Save</button>
-            <button onClick={handleDelete}>Delete</button>
-            <button onClick={onClose}>Cancel</button>
+
+
+
+
+
+                            <select 
+                                value={form.vendor}
+                                onChange={(e) => setForm({ ...form, vendor: e.target.value })}
+                            >Vendor
+                                <option   value="">Select Vendor</option>
+                                {vendors.map(v => (
+                                    <option class="dropdown-item" key={v.id} value={v.name}>{v.name}</option>
+                                ))}
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div className="actions">
+                <button onClick={handleUpdate}>Save</button>
+                <button onClick={handleDelete}>Delete</button>
+                <button onClick={onClose}>Cancel</button>
+            </div>
+
             </div>
 
         
@@ -182,114 +193,415 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
 };
 
 // Main component showing list of users
-const UserList = () => {
 
-    //const [onpageshow, setOnPageShow] = useState(true)
+const UserList = () => {
     const port = 5552;
     const [users, setUsers] = useState([]);
+    const [allProducts, setAllProducts] = useState([]);
+    const [prodCount, setProdCount] = useState(0);
+    const [lastUpdate, setLastUpdate] = useState("");
+    const [prodOffset, setProdOffset] = useState(0);
     const [editingUser, setEditingUser] = useState(null);
+    const [prodVisibility, setProdVisibility] = useState(true);
+    const [swish, setswish] = useState(false);
+    const [searchField, setSearchField] = useState("sku"); // default search by SKU
 
-    // toggle products visibility 
-    const [ProdVisibility, setProdVisibility] = useState(false)
-    
-
-
-
-    // Load all users
+    // Fetch all products
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchAllProducts = async () => {
             try {
-            
-                const response = await fetch("http://localhost:" + port + "/userr");
+                const response = await fetch(`http://localhost:${port}/allproducts`);
+                const data = await response.json();
+                setAllProducts(data.data);
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+        };
+        fetchAllProducts();
+    }, [prodOffset]);
+
+    // Fetch product count
+    useEffect(() => {
+        const fetchProductCount = async () => {
+            try {
+                const response = await fetch(`http://localhost:${port}/getproductcount`);
+                const data = await response.json();
+                const total = data.data.rows[0].total;
+                setProdCount(total);
+            } catch (error) {
+                console.error("Error fetching product count:", error);
+            }
+        };
+        fetchProductCount();
+    }, [prodOffset]);
+
+    // Fetch last update
+    useEffect(() => {
+        const fetchLastUpdate = async () => {
+            try {
+                const response = await fetch(`http://localhost:${port}/lastupdate`);
+                const data = await response.json();
+                const updatedOn = data.data[0].updated_on;
+                const d = new Date(updatedOn);
+                setLastUpdate(d.toLocaleString());
+            } catch (error) {
+                console.error("Error fetching last update:", error);
+            }
+        };
+        fetchLastUpdate();
+    }, []);
+
+    // Fetch users
+    useEffect(() => {
+        const fetchUsers = async (offset) => {
+            try {
+                const response = await fetch(`http://localhost:${port}/userr/${offset}`);
                 const data = await response.json();
                 setUsers(data.data);
             } catch (error) {
                 console.error("Error fetching users:", error);
             }
         };
-
-        fetchUsers();
-    }, []);
+        fetchUsers(prodOffset);
+    }, [prodOffset]);
 
     // Update user in state after editing
     const handleUserUpdated = (updatedUser) => {
         setUsers(users.map(u => (u.id === updatedUser.id ? updatedUser : u)));
     };
 
+    const formatDateAndTime = (date) => {
+        const d = new Date(date);
+        return d.toUTCString();
+    };
+
+    const CheckUpdates = (dbproducts, livefeedprod) => {
+        if (!Array.isArray(dbproducts) || !Array.isArray(livefeedprod)) {
+            return "Invalid product data";
+        }
+
+
+        var match = 0;
+        var matchPrice = 0;
+
+
+        dbproducts.forEach(prod => {
+            livefeedprod.forEach(prodd => {
+                try {
+                    if (prod.sku === prodd.sku) {
+                        match++;
+                        if (prod.price === prodd.price) {
+                            matchPrice++;
+                            console.log(`${prod.price} - ${prodd.price}`);
+
+                        }
+                    }
+                    else {
+                        console.log(`No match for SKU: ${prod.sku} - ${prodd.sku}`);
+
+                    }
+                } catch (error) {
+                    console.log("Error: " + error);
+                }
+
+
+
+            });
+        });
+
+        return `Product count mismatch! DB: ${dbproducts.length} vs Live Feed: ${livefeedprod.length} - found ${match} with matching SKUs -  ${dbproducts.length - match} were not matched -      ${matchPrice}`;
+    };
+
+    const Paginate = (action) => {
+        if (action === "next") {
+            setProdOffset(i => i + 100);
+        } else if (action === "prev" && prodOffset > 0) {
+            setProdOffset(i => i - 100);
+        }
+    };
+
+
+    const BulkEdit = () => {
+
+        var iput = document.querySelectorAll(".delivery_cost");
+        var te = document.getElementById("bulk_edit_text");
+
+        iput.forEach(i => {
+            i.innerHTML = te.value;
+        });
+        console.log(te.value);
+
+    }
+    const CalculatePrice = () => {
+
+        var iput = document.querySelectorAll(".price_mark");
+        var te = document.getElementById("bulk_edit_text");
+
+        iput.forEach(i => {
+            i.innerHTML = te.value;
+        });
+        console.log("Click");
 
 
 
 
-    return (
-        <div className="Products_List">
-            <br />
-            <button onClick={() => {
-                setProdVisibility(!ProdVisibility);
-            }}>View All Products</button>
-            {ProdVisibility && <div>
-            <h2>Products List</h2>
-            <br />
 
-          
+        const [searchTerm, setSearchTerm] = useState("");
+        //const [produc, setproduc] = useState([]);
+        // Filter products based on search term 
+        const filteredProducts = users.filter((u) =>
+            Object.values(u).some((val) =>
+                String(val).toLowerCase().includes(searchTerm.toLowerCase())));
 
-                <table className="table table-striped"  Id="prod_table">
-                <thead >
-                    <tr>
-                        
-                        <th>SKU</th>
-                        <th>PRODUCT NAME</th>
-                        <th>DESCRIPTION</th>
-                        <th>PRICE</th>
-                        <th>DELIVERY</th>
-                        <th>MARK UP</th>
-                        <th>VAT</th>
-                        <th>QUANTITY</th>
-                        <th>CATEGORY</th>
-                        <th>VENDOR</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map(u => (
-                        <tr key={u.id}>
-                            
-                            <td>{u.sku}</td>
-                            <td>{u.name}</td>
-                            <td>{u.description}</td>
-                            <td>{u.price}</td>
-                            <td>{u.delivery_cost}</td>
-                            <td>{u.mark_up}</td>
-                            <td>{u.vat}</td>
-                            <td>{u.quantity}</td>
-                            <td>{u.category}</td>
-                            <td>{u.vendor}</td>
-                            
-                            <td>
 
-                            
-                                <button onClick={() => setEditingUser(u)}>Edit</button>
 
-                            
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <div className="edit_prod_sec">
-            {editingUser && (
-                <UserEditor
-                    user={editingUser}
-                    onClose={() => setEditingUser(null)}
-                    onUpdated={handleUserUpdated}
-                />
-            )}
 
-        </div> </div>}
-        </div>);
+        return (
+            <div className="Products_List">
+                {/*<Pop product={produc} />*/}
+
+                <br />
+                <button onClick={() => setProdVisibility(!prodVisibility)}>
+                    View All Products
+                </button>
+
+                {prodVisibility && (
+                    <div>
+                        <h2>Products List</h2>
+                        <br />
+
+                        <button onClick={() => setswish(!swish)}>
+                            TOGGLE
+                        </button>
+
+
+
+                        {swish === true &&
+                            <div>
+                                {/* Search controls */}
+                                <div style={{ marginBottom: "10px" }}>
+                                    <select
+                                        value={searchField}
+                                        onChange={(e) => setSearchField(e.target.value)}
+                                        style={{ marginRight: "10px", padding: "5px" }}
+                                    >
+                                        <option value="sku">SKU</option>
+                                        <option value="price">Price</option>
+                                        <option value="mark_up">Mark Up</option>
+                                        <option value="price_after_mark_up">Price After Mark Up</option>
+                                        <option value="updated_on">Updated On</option>
+                                    </select>
+
+                                    <input
+                                        type="text"
+                                        placeholder={`Search by ${searchField}...`}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{ padding: "5px", width: "250px" }}
+                                    />
+                                </div>
+
+                                {/* Table */}
+                                <table className="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>sku</th>
+                                            <th>price</th>
+                                            <th>mark_up</th>
+                                            <th>price_after_mark_up</th>
+                                            <th>updated_on</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users
+                                            .filter((u) => {
+                                                const value = u[searchField];
+                                                return (
+                                                    value &&
+                                                    String(value).toLowerCase().includes(searchTerm.toLowerCase())
+                                                );
+                                            })
+                                            .map((u) => (
+                                                <tr key={u.sku}>
+                                                    <td>{u.sku}</td>
+                                                    <td style={{ backgroundColor: "green", color: "white", fontWeight: "bold" }}>
+                                                        R{u.price || 0}
+                                                    </td>
+                                                    <td style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                                        {u.mark_up || 0}%
+                                                    </td>
+                                                    <td style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                                        R{u.price_after_mark_up || 0}
+                                                    </td>
+                                                    <td>{u.updated_on}</td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+
+
+                                <div className="Paginator">
+                                    <button onClick={() => Paginate("next")}>Next</button>
+                                </div>
+                                {prodOffset > 0 && (
+                                    <div className="Paginator1">
+                                        <button onClick={() => Paginate("prev")}>Previous</button>
+                                    </div>
+                                )}
+                                <h4 className="Paginator2">
+                                    Showing {prodOffset || 100} of {prodCount}
+                                </h4>
+                            </div>
+                        }
+
+                        <br />
+
+                        {editingUser && (
+                            <UserEditor
+                                user={editingUser}
+                                onClose={() => setEditingUser(null)}
+                                onUpdated={handleUserUpdated}
+                            />
+                        )}
+
+                        {prodCount !== null && (
+                            <div className="Prod_Count">
+                                <h2>TOTAL PRODUCTS:</h2>
+                                <h1>{prodCount}</h1>
+                            </div>
+                        )}
+
+                        {lastUpdate && (
+                            <div className="Last_Update">
+                                <h2>LAST UPDATE:</h2>
+                                <h1>{lastUpdate}</h1>
+                            </div>
+                        )}
+                        SEARCH
+                        <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ marginBottom: "10px", padding: "5px", width: "250px" }}
+                        />
+                        {filteredProducts.length < 0 && <div>
+                            {/* Search box */}
+
+                            <br />
+                            <h1>SEARCHED TERM:</h1>
+                            <table className="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>sku</th>
+                                        <th>price</th>
+                                        <th>mark_up</th>
+                                        <th>price_after_mark_up</th>
+                                        <th>updated_on</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredProducts.map((u) => (
+                                        <tr key={u.sku}>
+                                            <td>{u.sku}</td>
+                                            <td style={{ backgroundColor: "green", color: "white", fontWeight: "bold" }}>
+                                                R{u.price || 0}
+                                            </td>
+                                            <td style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                                {u.mark_up || 0}%
+                                            </td>
+                                            <td style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                                R{u.price_after_mark_up || 0}
+                                            </td>
+                                            <td>{u.updated_on}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                        </div>}
+
+                        <table className="table table-striped" id="prod_table">
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT_NAME</th>
+                                    <th>SKU</th>
+                                    <th style={{ backgroundColor: "green", color: "white", fontWeight: "bold" }}>PRICE</th>
+                                    <th style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>MARK_UP</th>
+                                    <th style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>Price+Mark_Up</th>
+                                    <th>DELIVERY<input type="text" id="bulk_edit_text" placeholder="Bulk edit" onChange={BulkEdit}></input></th>
+                                    <th>QUANTITY</th>
+                                    <th>Last Update</th>
+                                    <th>Feed Last Update</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.map(u => (
+                                    <tr key={u.sku}>
+                                        <td>{u.name}</td>
+                                        <td>{u.sku}</td>
+                                        <td style={{ backgroundColor: "green", color: "white", fontWeight: "bold" }}>
+                                            R{u.price || 0}
+                                        </td>
+                                        <td style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                            {u.mark_up || 0}%
+                                        </td>
+                                        <td onClick={CalculatePrice} id="price_mark" className="price_mark" style={{ backgroundColor: "red", color: "white", fontWeight: "bold" }}>
+                                            R{u.price_after_mark_up || 0}
+                                        </td>
+                                        <td className="delivery_cost">{u.delivery_cost}</td>
+                                        <td>{u.quantity}</td>
+                                        <td>{formatDateAndTime(u.updated_on)}</td>
+                                        <td>{formatDateAndTime(u.livefee_updated_on)}</td>
+                                        <td>
+                                            <button onClick={() => setEditingUser(u)}>Edit</button>
+                                            {/*<button onClick={() => setproduc(u)}>Edit</button>*/}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                <div className="Paginator">
+                    <button onClick={() => Paginate("next")}>Next</button>
+                </div>
+                {prodOffset > 0 && (
+                    <div className="Paginator1">
+                        <button onClick={() => Paginate("prev")}>Previous</button>
+                    </div>
+                )}
+                <h4 className="Paginator2">
+                    Showing {prodOffset || 100} of {prodCount}
+                </h4>
+
+
+
+
+
+
+
+
+
+
+                {users <= 0 && (
+                    <div>
+                        {users.map((i, index) => (
+                            <ul key={index}>
+                                <li>{i.name} - {i.sku} - {i.last_modified}</li>
+                            </ul>
+                        ))}
+                        <div>
+                            <h1 className="alert alert-danger" role="alert">
+                                {CheckUpdates(allProducts, users)}
+                            </h1>
+                        </div>
+                    </div>
+                )}
+
+
+
+            </div>
+        );
+    }
 }
+
 export default UserList;
-
-
-
-
-

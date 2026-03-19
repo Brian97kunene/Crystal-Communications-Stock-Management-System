@@ -3,35 +3,26 @@
 
 }
 
-.logo {
-<<<<<<< HEAD
-    margin-left: 00px;
-=======
-    margin-left: 400px;
->>>>>>> 4244f5043afe625636b9eb7f6c41dc54d9ba8d1f
+.root {
+    animation-name: slideIn;
+    animation-duration: 2s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
 }
-
 .main {
-
     margin: 20px;
-    margin-left: 100px;
+    margin-left: 00px;
     padding: 20px;
+    animation-name: fadeIn;
+    animation-duration: 2s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
 }
 .userslist {
     list-style-type: none;
 }
 
 
-button {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-<<<<<<< HEAD
 .Products_List h2 {
     display:block;
 
@@ -65,11 +56,14 @@ button {
     margin-right: unset;
 }
 .search_area {
+    display: inline-block;
+    margin-top: 0px;
+    margin-left: 0px;
 
-
-    display: flex;
-    justify-content: flex-end;
-
+    padding: 30px;
+    border-radius: 15px;
+    border: solid black 2px;
+    height: auto;
 }
 
 
@@ -169,8 +163,8 @@ button {
     }
 
 .Live_Feed {
-    margin-left: 50px;
-    margin-top: 100px;
+    margin-left: 0px;
+    margin-top: 10px;
     border: 1px double black;
     width: auto;
     padding:10px;
@@ -179,7 +173,9 @@ button {
 
 button {
     border-radius: 10px;
-    
+    background: #0c086b;
+    color:white;
+    border: 2px black solid;
 }
 
     .prod_table_ td img {
@@ -199,7 +195,7 @@ button {
 
 
 .vendor_List {
-    margin-left: 100px;
+    margin-left: 0px;
     width: auto;
     border: solid black 1px;
     padding: 20px;
@@ -207,7 +203,7 @@ button {
 
 
 .Products_List {
-    margin-left: 100px;
+    margin-left: 0px;
     width: auto;
     border: solid black 1px;
     padding: 20px;
@@ -218,10 +214,312 @@ button {
     }
 
 
-input {
+.table table-striped {
+    border: dashed red 5px;   
+}
+
+
+
+
+inpuat {
     border-top-left-radius: 10px;
     border-end-end-radius: 10px;
     height: 50px;
     margin-right: 10px;
     width: 250px;
+}
+
+
+
+.Prod_Count h1{
+
+
+    display:flex;
+    justify-content:flex-end;
+    font-size: 80px ;
+    margin-top:-80px;
+    font-weight:bolder;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    color:green;
+}
+
+.Prod_Count h2 {
+    display: flex;
+    justify-content: flex-end;
+    margin-right:200px;
+}
+
+.Last_Update h2 {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 480px;
+}
+.Last_Update h1 {
+    color:red;
+
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 20px;
+    font-weight:bolder;
+    margin-top:-50px;
+    margin-bottom:20px;
+}
+
+.Live_Prod_Count {
+    display: flex;
+    justify-content: center;
+}
+
+.Paginator{
+    display: flex;
+    justify-content: right;
+    margin-right: 20px;
+}
+
+.Paginator button {
+
+    margin-right:0px;
+}
+
+
+.Paginator2 {
+    display: flex;
+    justify-content: center;
+}
+
+
+.Paginator1 {
+    display: flex;
+    justify-content: left;
+    margin-right:-100px;    
+    margin-top:-60px;    
+}
+
+.actions button {
+    margin: 20px;
+    width: 100px;
+    -webkit-border-bottom-left-radius: inherit;
+    -webkit-border-bottom-right-radius: inherit;
+
+}
+
+
+
+
+
+
+
+
+
+
+.progress-container {
+    width: 100%;
+    background-color: #f3f3f3;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+    height: 20px;
+}
+
+h1 {
+    color: black;
+}
+
+
+
+.progress-container {
+    background: #0c086b ;
+}
+    .progress-bar {
+    height: 100%;
+    border: solid #0c086b 3px;
+    border-radius: 8px;
+    background: white;
+    transition: width 2.0s ease;
+}
+
+.table_style {
+    background: linear-gradient(to top left, blue, white);
+    color:aliceblue;
+}
+.drag_drop {
+    background: linear-gradient(to top left, blue, white);
+    color:aliceblue;
+}
+
+
+.db_info {
+    border: solid black 3px;
+    padding: 20px;
+    margin: 2px;
+    border-radius: 10px;
+}
+.db_info_1 {
+    overflow-y: scroll;
+    height: 300px;
+    margin-bottom: 30px;
+    margin-left: 50px;
+    width: 90%;
+
+    margin-top:0px;
+}
+.db_info_11 {
+    overflow-x: scroll;
+    overflow-y: scroll;
+    height: 600px;
+    margin-bottom: 30px;
+    margin-left: 50px;
+    width: 90%;
+
+    margin-top:0px;
+}
+.db_info_2 {
+    margin-top: 0px;
+    overflow-y: scroll;
+    height: 300px;
+    margin-bottom: 30px;
+    margin-left: 50px;
+    width: 90%;
+}
+
+
+.header {
+font-size:10px;
+position:sticky;
+margin-right:0px
+
+
+}
+
+
+table tbody td {
+    width:auto;
+
+
+}
+
+.wrapper {
+    overflow-y: scroll;
+    height: 500px;
+    width: 100%;
+    margin-left: 0px;
+    padding: 0px;
+    border: 3px solid black;
+}
+    .db_info_3 {
+    margin-top: 10px;
+    overflow-y: scroll;
+    height: 300px;
+    margin-bottom: 30px;
+    margin-left: 50px;
+    width: 90%;
+}
+.db_info_ {
+    
+    margin-left:930px;
+    border: solid black 2px;
+    padding: 20px;
+    margin: 2px;
+    border-radius: 10px;
+    display: flex;
+
+}
+
+div {
+width:100%;
+border-radius: 8px;
+
+
+}
+#productsTable {
+    width: 100%;
+    border-radius: 8px;
+    background-color: black;
+    animation-name: slideIn;
+    animation-duration: 5.5s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
+}
+
+.scroll_to {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    border: solid black 2px;
+    background-color: black;
+    
+    opacity: 0.6;
+    width: auto;
+}
+html {
+    scroll-behavior: smooth;
+}
+
+
+.table-container {
+    max-height: 400px; /* Or any height you want */
+    overflow-y: auto; /* Enables the vertical scroll */
+}
+
+table thead th {
+    position: sticky;
+    top: 0; /* Sticks to the very top of the container */
+    background-color: #fff; /* Important: prevents rows from showing behind text */
+    z-index: 1; /* Ensures it stays above the table body rows */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Optional: adds a nice border effect */
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid blue; /* red accent */
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+
+/* Define the animation */
+@keyframes slideIn {
+    from {
+        transform: translateY(-100%);
+        transform: translateX(-100%);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(0);
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+    /* Apply the animation */
+    #updates {
+
+    animation-name: OpenUp;
+    animation-duration: 5s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
+}
+body {
+    animation-name: slideIn;
+    animation-duration: 3.5s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
 }

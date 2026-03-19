@@ -183,7 +183,7 @@ const Vendors = () => {
 
 
 
-                <table className="vendor_table" Id="vendor_table">
+                <table className="table table-striped" Id="vendor_table">
                     <thead >
                         <tr>
 

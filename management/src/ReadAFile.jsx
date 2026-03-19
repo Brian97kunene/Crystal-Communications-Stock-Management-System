@@ -1,9 +1,12 @@
 ﻿import { useState, useEffect } from "react";
 import Papa from "papaparse";
 
-function CsvDropEditor() {
+function CsvDropEditor(supplier) {
     const [fileName, setFileName] = useState("");
     const [rows, setRows] = useState([]);
+    const [vendors, setvendors] = useState([]);
+    const [suppli, setsuppli] = useState({});
+    const [vendor, setvendor] = useState({ name: "", address: "", contact:"", contact_name:"", email:"" });
     const [searchTerm, setSearchTerm] = useState("");
     const [dbColumns, setDbColumns] = useState([]);
     const [matchedColumns, setMatchedColumns] = useState([]);
@@ -29,6 +32,7 @@ function CsvDropEditor() {
                 const result = await response.json();
                 if (result.success) {
                     setDbColumns(result.columns);
+                    setsuppli(supplier.supplier)
                 }
             } catch (error) {
                 console.error("Error fetching DB columns:", error);
@@ -37,7 +41,7 @@ function CsvDropEditor() {
         fetchDbColumns();
     }, []);
 
-
+    
 
 
     function addRow(row) { setRows(prevRows => [...prevRows, row]); }
@@ -67,7 +71,7 @@ function CsvDropEditor() {
                     }, complete: (result) => {
                         const parsedData = Array.isArray(result.data) ? result.data : [];
 
-                        console.log(parsedData);
+                        //console.log(parsedData);
 
                         setLoading(false);
                         setProgress(100);
@@ -209,8 +213,7 @@ function CsvDropEditor() {
                 if (score >= 0.7) { // threshold for "close enough"
                     nearMatches.push({ fileCol: col, dbCol, score });
 
-                    console.log(missingColumns);
-                    console.log(extraColumns);
+                    
                 }
             });
         });
@@ -225,10 +228,10 @@ function CsvDropEditor() {
         if (rows.length > 0) {
             compareColumns(Object.keys(rows[0]));
         }
-    }, []);
+    }, [rows]);
 
 
-
+    
 
 
     // VERY IMPORTANT, ALGORITHMIC WAY OF COMPARING STRINGS
@@ -273,25 +276,87 @@ function CsvDropEditor() {
 
 
 
+    const getSupplier = (supp) => {
+
+
+        console.log(supp);
+
+    }
+
+    const getSupplier1 = async (supp) => {
+
+
+           console.log(supp, " our obj supp");
+        console.log(JSON.stringify(supplier.supplier.id), " our supp");
+
+        const na = supp.split(" ");
+
+        var str = ""
+        str = na.join("-");
+        
+
+            console.log(na, " our supp");
+        console.log(`http://localhost:5552/vendor/byname/${na}`);
+        try {
+            const sup = await fetch(`http://localhost:5552/vendor/byname/${na}`);
+            const result = await sup.json();
+
+            console.log(result);
+
+
+            if (result.success) {
+
+                console.log("fetch val:", result.data)
+         
+            }
+            console.log("res", result);
+            
+
+        }
+        catch (err) {
+
+            console.log( err);
+
+        }
+
+
+    }
+
     const insertRowsToDb = async (mappedRows) => {
 
 
+        //const supplier_name = document.getElementById("vendorname").value;
+        //const supplierdd = document.getElementById("vendordd").value;
 
-
+        /*const v = await getSupplier1(supplier_name);*/
+        console.log(JSON.stringify(mappedRows), " mappedRows");
+        console.log(JSON.stringify(suppli), " supply");
+      /* console.log(v," supplier obj");*/
         try {
-            const response = await fetch("http://localhost:5552/api/bulk-insert", {
+
+       
+
+            const response = await fetch("http://localhost:5552/api/bulk-update", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ rows: mappedRows }),
+                body: JSON.stringify({
+                    rows: mappedRows,
+                    supply: suppli
+                }),
             });
 
+
+           /* console.log(supplierdd, " Dropdown");*/
+            console.log(suppli, " :fetch value");
             const result = await response.json();
+            console.log("response: ",result);
             if (result.success) {
                 alert("Rows inserted successfully!");
-                console.log("Rows to add:  " + JSON.stringify(mappedRows));
+                console.log("Rows to add:  " + JSON.stringify(mappedRows, supplier));
             } else {
                 alert("Failed to insert rows.");
                 console.log(result);
+                console.log("Mapped: ", JSON.stringify((mappedRows, supplier)));
             }
         } catch (error) {
             console.error("Error inserting rows:", error);
@@ -312,23 +377,100 @@ function CsvDropEditor() {
 
     const handleInsert = () => {
         // Map selected rows with manual column mappings
-        const rowsToInsert = selectedRows.map((i) => {
+
+        const str = [];
+
+        console.log("selected: ",selectedRows);
+
+        const rowsToInsert = selectedRows.map((i) => { // FOR ROWS
             const row = rows[i];
             const mappedRow = {};
 
-            Object.keys(row).forEach((fileCol) => {
+            Object.keys(row).forEach((fileCol) => { // FOR COLUMNS
                 const dbCol = manualMappings[fileCol];
                 if (dbCol) {
                     mappedRow[dbCol] = row[fileCol];
                 }
             });
-
+            str.push(mappedRow);
             return mappedRow;
         });
 
         // Call your DB insert function
         insertRowsToDb(rowsToInsert);
+            console.log(" ROWS THATS ARE RUINING MY LIFE");
+        console.log(str);
     };
+
+
+
+    const createvendor = async (vend) => {
+
+        
+        console.log("creating...", vend);
+
+        
+
+            
+            try {
+                const response = await fetch("http://localhost:5552/createvendor", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(vend),
+                });
+
+
+
+                alert("CREATED: ",vend);
+                console.log(response);
+            }
+            catch (err) {
+
+
+                alert(err);
+
+            }
+        }
+        
+
+            
+
+
+        
+    
+    const BulkTick = () => {
+
+        var iput = document.querySelectorAll(".bulk_add_cb");
+        var te = document.getElementById("tick_all");
+        var val = te.checked;
+        iput.forEach(i => {
+
+
+            i.checked = val;
+        });
+        console.log(te.value);
+
+    }
+
+
+
+    useEffect(() => {
+        const fetchvendors = async () => {
+            try {
+
+               
+                const response = await fetch("http://localhost:5552/vendors");
+                const result = await response.json();
+                if (result.success) {
+                    setvendors(result.data);
+                }
+            } catch (error) {
+                console.error("Error fetching DB columns:", error);
+            }
+        };
+        fetchvendors();
+    }, []);
+
 
 
 
@@ -346,9 +488,9 @@ function CsvDropEditor() {
                 style={{
                     border: "2px dashed #333",
                     padding: "20px",
-                    width: "700px",
+                    width: "auto",
                     margin: "20px auto",
-                    marginLeft: "100px",
+                    marginLeft: "0px",
                     textAlign: "center",
                     background: "#fafafa",
                 }}
@@ -357,6 +499,32 @@ function CsvDropEditor() {
 
 
 
+                        
+
+                {false && ( <div>
+                <select id="vendordd">
+                    {vendors.map(vendor =>
+
+                        <option key={vendor.id} >
+                            {vendor.name}
+                    </option>
+                
+                       
+                    )}
+                        <option>None</option>
+                            
+                </select><br/>
+              
+
+                <input type="text" id="vendorname" className="form-control" value={vendor.name} placeholder="Supplier.." onChange={(e) => setvendor({ ...vendor, name: e.target.value })} /><br />
+
+                <button onClick={() => createvendor(vendor) }>Create Supplier
+                    </button>
+
+                </div>
+    )
+
+}
 
 
 
@@ -422,12 +590,13 @@ function CsvDropEditor() {
 
 
 
-
-                            <table style={{ width: "100%", marginTop: "10px" }}>
+                            <div class="db_info_11">
+                            <table style={{ width: "90px", marginTop: "10px", overflowX: "scroll" }}>
                                 <thead>
                                     <tr>
-                                        <th></th>
-                                        {Object.keys(rows[0]).map((col, index) => (
+
+                                            <th>ALL <input id="tick_all" type="checkbox" onChange={() => BulkTick()} /></th>
+                                            {Object.keys(rows[0]).map((col, index) => (
                                             <th
                                                 key={index}
                                                 style={{
@@ -442,7 +611,7 @@ function CsvDropEditor() {
                                                 <select value={manualMappings[col] || ""} onChange={(e) =>
                                                     setManualMappings((prev) => ({
                                                         ...prev,
-                                                        [col]: e.target.value,
+                                                        [col]: e.target.value
                                                     }))
                                                 }
                                                 >
@@ -463,9 +632,10 @@ function CsvDropEditor() {
                                     {filteredRows.map((row, i) => (
                                         <tr key={i}>
 
-                                            <td>
+                                            <td>{(i + 1)})   
                                                 <input
                                                     type="checkbox"
+                                                    class="bulk_add_cb"
                                                     checked={selectedRows.includes(i)}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
@@ -501,6 +671,7 @@ function CsvDropEditor() {
                                 </tbody>
                             </table>
 
+                            </div>
 
                          
 

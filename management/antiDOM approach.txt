@@ -1,0 +1,84 @@
+import React, { useState, useMemo } from 'react';
+
+const ProductTable = ({ initialProducts }) => {
+  // 1. Store products in a Map for fast O(1) updates
+  const [productMap, setProductMap] = useState(new Map(initialProducts.map(p => [p.sku, p])));
+  
+  // 2. Local state for the bulk input fields
+  const [bulkMarkup, setBulkMarkup] = useState("");
+  const [bulkDelivery, setBulkDelivery] = useState("");
+
+  const handleSaveAll = () => {
+    // Create a new Map to trigger React re-render
+    const newMap = new Map(productMap);
+    const updatedItems = [];
+
+    newMap.forEach((product, sku) => {
+      const markupVal = bulkMarkup !== "" ? Number(bulkMarkup) : Number(product.mark_up);
+      const deliveryVal = bulkDelivery !== "" ? Number(bulkDelivery) : (Number(product.delivery_cost) || 0);
+      const vat = Number(product.vat) / 100;
+      
+      const totalCost = Number(product.price) + deliveryVal;
+      const finalPrice = (totalCost * (1 + (markupVal / 100)) * (1 + vat)).toFixed(2);
+
+      // Update the object in our Map
+      const updatedProduct = { 
+        ...product, 
+        price_after_mark_up: finalPrice,
+        delivery_cost: deliveryVal,
+        mark_up: markupVal
+      };
+      
+      newMap.set(sku, updatedProduct);
+      updatedItems.push(updatedProduct);
+    });
+
+    setProductMap(newMap);
+    
+    // Now trigger the batch API call we discussed earlier
+    // sendInChunks(updatedItems); 
+  };
+
+  // Convert Map back to array for rendering
+  const productList = useMemo(() => Array.from(productMap.values()), [productMap]);
+
+  return (
+    <table className="table">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Price+Markup</th>
+          <th>
+            Delivery 
+            <input 
+              type="text" 
+              value={bulkDelivery} 
+              onChange={(e) => setBulkDelivery(e.target.value)} 
+              placeholder="Bulk Delivery..."
+            />
+          </th>
+          <th>
+            Markup 
+            <input 
+              type="text" 
+              value={bulkMarkup} 
+              onChange={(e) => setBulkMarkup(e.target.value)} 
+              placeholder="Bulk Markup..."
+            />
+          </th>
+          <th><button onClick={handleSaveAll}>SAVE ALL</button></th>
+        </tr>
+      </thead>
+      <tbody>
+        {productList.map((row) => (
+          <tr key={row.sku}>
+            <td>{row.sku}</td>
+            <td>R{row.price_after_mark_up}</td>
+            <td>R{row.delivery_cost}</td>
+            <td>{row.mark_up}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};

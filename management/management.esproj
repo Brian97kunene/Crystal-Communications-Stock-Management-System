@@ -10,5 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="backend\" />
+    <Folder Include="public\backend\" />
   </ItemGroup>
 </Project>
