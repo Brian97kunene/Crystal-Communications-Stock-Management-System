@@ -28,8 +28,8 @@ function ManualRowSelection() {
     const [progress, setProgress] = useState(0);
 
     const [loading, setLoading] = useState(false);
-    const [fals, setFals] = useState(false);
     const [refresh, setrefresh] = useState(false);
+    const [fals, setFals] = useState(false);
 
 
 
@@ -95,7 +95,7 @@ function ManualRowSelection() {
 
     const refreshComponent = () => {
 
-        setrefresh(prev => !prev);
+        ;
 
 
     }
@@ -185,7 +185,7 @@ function ManualRowSelection() {
                     <div className="progress-bar" style={{ width: `${progress}%`}}>{progress}%</div>
                 </div></>
             )}
-            <button onClick={() => refreshComponent()}>refresh</button>
+            <button onClick={() => setrefresh(prev => !prev)}>refresh</button>
        
         
 

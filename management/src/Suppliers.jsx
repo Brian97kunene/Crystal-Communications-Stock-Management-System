@@ -16,9 +16,32 @@ const Suppliers = () => {
     const [updates, setupdates] = useState(true)
     const [editsuppliers, seteditsuppliers] = useState(false)
     const [supps, setsupps] = useState([]);
+
+
+    // for refreshes
+    // for refreshes
+    const [progress, setProgress] = useState(0);
+
+    const [loading, setLoading] = useState(false);
+    const [refresh, setrefresh] = useState(false);
+    // for refreshes
+    // for refreshes
+    // for refreshes
+
     useEffect(() => {
         const fetchLastUpdate = async () => {
             try {
+               
+                setLoading(true);
+                setProgress(0);
+
+                // Simulate progress increments while fetching
+                const interval = setInterval(() => {
+                    setProgress((prev) => (prev <= 75 ? prev + 10 : prev));
+                }, 100);
+                // for sync testing
+
+
                 const response = await fetch(`http://localhost:${port}/vendors`);
                 const data = await response.json();
 
@@ -26,10 +49,18 @@ const Suppliers = () => {
                 console.log(data.data)
             } catch (error) {
                 console.error("Error fetching last update:", error);
-            }
+            
+        } finally {
+
+
+
+            setLoading(false);
+            setProgress(0); // reset after short delay
+
+        }
         };
         fetchLastUpdate();
-    }, []);
+    }, [refresh]);
 
 
     useEffect(() => {
@@ -184,7 +215,7 @@ const Suppliers = () => {
 
 
 
-
+        console.log(supps);
 
         const response = await fetch(`http://localhost:${port}/deletevendor`, {
             method: "DELETE", // or "PATCH" if partial updates
@@ -192,21 +223,44 @@ const Suppliers = () => {
                 "Content-Type": "application/json"
 
             },
-            body: JSON.stringify({
-               supps
+            body: JSON.stringify({ rows: supps }
                
-            }),
+               
+            ),
         });
+
+
+        if (response.status) {
+
+
+            setsupps([])
+        }
     }
 
 
     return (
         <div>
+
+
+            {loading && (<>
+
+                <p style={{ color: "#0c086b" }}  disabled={loading}>
+                    {loading ? "Fetching Suppliers..." : ""}
+                </p>
+                <div className="progress-container">
+                    <div className="progress-bar" style={{ width: `${progress}%` }}>{progress}%</div>
+                </div></>
+            )}
+            
+
+
+
+
             <div style={{  display: "flex", justifyContent: "center" }}>
                 <h1>SUPPLIERS</h1>
                 </div>
             <br />
-            {supps && (supps.map(i => { return Object.values(i) }))}
+            
             <div style={{  display: "flex", justifyContent: "center" }}>
                 <br />
             <button onClick={() => {
@@ -222,8 +276,12 @@ const Suppliers = () => {
             </>} 
 
             <ol>
-                <button onClick={()=>deleteProducts(l)}>DELETE MARKED SUPPLIERS
-                </button>
+                {supps && <>
+                    <button onClick={() => deleteProducts(l)}>DELETE MARKED SUPPLIERS 
+                </button><br />
+                    </> 
+            }
+                <button style={{ display:"sticky" , position:"static" }} onClick={() => setrefresh(prev => !prev)}>Refresh</button>
 
                     <div class="accordion" id="accordionUpdates">
                         { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
@@ -231,8 +289,9 @@ const Suppliers = () => {
                         { /*id="headingOne"*/}
 
                         <div class="accordion-item">
-            {suppliers.map((supplier ,indx)=> 
+                        {suppliers.map((supplier, indx) => 
                     <li key={supplier.id}>
+                                <input type="checkbox" style={{width:"15px"}} onChange={() => mark(supplier)}></input>
 
                     
                   
@@ -241,7 +300,7 @@ const Suppliers = () => {
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target={"#collapse" + numberToWords(supplier.id)} aria-expanded="true" aria-controls="collapseOne">
 
                             <div class="" role="alert">
-                                <input type="checkbox" onChange={() => mark(supplier)}></input>
+                                
                                 <h1>{supplier.name}</h1>
 
 
@@ -342,7 +401,7 @@ const Suppliers = () => {
 
 
 
-
+            <button onClick={() => setrefresh(prev => !prev)}>refresh</button>
 
 
 

@@ -1053,20 +1053,20 @@ app.post('/updatevendor', async (req, res) => {
 app.delete('/deletevendor', async (req, res) => {
     try {
 
-        const { rows } = req.body;
+        const  rows  = req.body.rows;
 
-        console.log(req.body.supps);
+        console.log(rows, " data");
 
-       console.log(BuildQuery("insert",req.body.supps));
-
-        const result = await pool.query(
-            'DELETE FROM vendor WHERE name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7 , id = $6 RETURNING *',
-            //[name, contact, contact_name, email, address, id,data_format]
-        );
-      
+       console.log(BuildQuery("insert",rows));
+        for (const row of rows) {
+            const result = await pool.query(
+                'DELETE FROM vendor WHERE name = $1 AND id = $2 RETURNING *',
+                [row.name, row.id]
+            );
+        }
 
         console.log("Inside vendor DELETE, AT: " + timeStamp());
-        res.json({ success: true, data: result });
+        res.json({ success: true  });
     } catch (error) {
         
         res.status(500).json({ success: false, error: error.message });

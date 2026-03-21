@@ -422,7 +422,7 @@ const ProductTable = ({ initialProducts }) => {
             <td>{row.sku}</td>
                       <td>
                           {editting && (<>
-                             <input type="text"></input>
+                              <input type="text" value={ row.price}></input>
                           </>
                           )
                           }
