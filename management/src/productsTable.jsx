@@ -22,9 +22,10 @@ const ProductsTable = ({ val, close, supplier }) => {
 
                 const data = await response.json();
                 setProducts(data.data);
-
+                console.log("****************");
                 console.log("data :", JSON.stringify(data.data));
                 console.log("supplier :", supplier.name);
+                console.log("****************");
                 //setUsers(data);
             } catch (error) {
                 console.error("Error posting data:", error);

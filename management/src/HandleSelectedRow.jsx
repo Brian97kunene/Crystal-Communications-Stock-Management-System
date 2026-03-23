@@ -52,11 +52,11 @@ function ManualRowSelection() {
                     var data = await response.json();
                     try {
                         setliveproducts(data.products);
-                        console.log("we are here");
+                        
                     }
                     catch(err) {
                     setliveproducts(feed.products);
-                        console.log("we are here also " ,err);
+                        
 
                     }
                 }

@@ -30,45 +30,80 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 const pool = new Pool({
     host: 'localhost',
     port: 5432,
-    database: 'Crystal_communications',
+    database: 'crystal_communications',
     user: 'postgres',
-    password: "GodUser"
+    password: 'GodUser'
 });
 
-function SyncTransaction(query, query1) {
+const BuildQuery = (dat, data) => {
+
+    var query1 = "";
+
+    if (dat == "insert") {
+
+
+        data.forEach((i, indx) => {
+
+            if (indx === data.length - 1) {
+
+                console.log(i);
+                query1 += `('${JSON.stringify(Object.keys(i)).replace("{", "").replace("}", "").replace("]", "").replace("[", "")}')`
+            }
+            else {
+
+                query1 += `('${JSON.stringify(Object.values(i)).replace("{", "").replace("}", "").replace("]", "").replace("[", "")}'),`
+
+            }
+
+
+        }
+        );
+    }
+    else if (dat == "update") {
+
+
+        query1 = `UPDATE vendor SET name = 'MTBTTF' where name='${JSON.stringify(data)}' RETURNING *;`;
+    }
+    return query1;
+
+
+}
+
+
+function SyncTransaction(query, query1, client, x) {
     // Express.js Backend Route
     app.post('/api/purchase', async (req, res) => {
-        const client = await pool.connect(); // Get a client from the pool
+
 
         try {
             await client.query('BEGIN'); // 1. Start Transaction
 
-       
+
 
             // 2. Deduct balance from user
-            const deductRes = await client.query(query);
 
-          
+            await client.query(BuildQuery("insert", query))
+            await client.query('Savepoint firstpoint;'); // 4. Save changes
+
 
             // 3. Record the order
-            await client.query(
-              query1
-            );
 
-            await client.query('COMMIT'); // 4. Save changes
+
             res.status(200).send('Transaction successful');
+
+
+            client.release(); // Always release the client back to the pool
+
+
 
         } catch (error) {
             await client.query('ROLLBACK'); // 5. Undo everything on error
             res.status(500).send(`Transaction failed: ${error.message}`);
-        } finally {
-            client.release(); // Always release the client back to the pool
+
         }
-    }); 
-
-
+    });
 }
-function  timeStamp() {
+function timeStamp() {
     var f = new Date();
     var datee = f.getDate();
     var month = f.getMonth();
@@ -86,18 +121,18 @@ function  timeStamp() {
         if (fff < 9) {
 
             timee = `0${ff}:0${fff} - ${datee}/${month}/${year}`;
-            
+
         }
     }
     else {
 
         if (fff < 9) {
             timee = `${ff}:0${fff} -  ${datee}/${month}/${year}`;
-           
-        }   
+
+        }
         else {
             timee = `${ff}:${fff} -  ${datee}/${month}/${year}`;
-           
+
         }
     }
 
@@ -121,8 +156,8 @@ app.post('/api/purchase', async (req, res) => {
     const client = await pool.connect(); // Get a client from the pool
     const { query, query1 } = req.body; // Expecting SQL queries in request body
     try {
-        SyncTransaction(query, query1);
-;
+        SyncTransaction(query, query1, client);
+        ;
     }
     catch (error) {
         res.status(500).send(`Transaction failed: ${error.message}`);
@@ -131,24 +166,51 @@ app.post('/api/purchase', async (req, res) => {
 
 
 
-    });
+});
+app.post('/api/getmarkups', async (req, res) => {
+    const client = await pool.connect(); // Get a client from the pool
+    const supplier_code = req.body; // Expecting SQL queries in request body
+    try {
+
+        console.log(supplier_code.code, " code");
+        await client.query(
+            `UPDATE product
+SET price_after_mark_up = (delivery_cost + price) * ((1 + (mark_up / 100.0)) * (1 + (vat / 100.0)))
+WHERE supplier_code = $1 RETURNING *; `
+            , [supplier_code.code]);
+
+
+        res.status(200).send(`Transaction failed: ${res.status}`);
+    }
+    catch (error) {
+        res.status(500).send(`Transaction failed: ${error.message}`);
+
+    }
+    finally {
+
+        client.release();
+    }
+
+
+
+});
 
 // CREATE - Add new user
 app.post('/createuser', async (req, res) => {
     try {
-        const { name, sku, description, price, delivery_cost, mark_up, vat,vendor,quantity,category } = req.body;
+        const { name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category } = req.body;
         const result = await pool.query(
             'INSERT INTO product (name,sku,description,price,delivery_cost,mark_up,vat,vendor,quantity,category)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category]
-            
-            
+
+
         );
-        
+
 
         console.log("Inside CREATE AT: " + timeStamp());
-        
-        
-        res.status(201).json({ success: true, data: result.rows[0] +" TESTSSSS" });
- 
+
+
+        res.status(201).json({ success: true, data: result.rows[0] + " TESTSSSS" });
+
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -162,7 +224,7 @@ app.post('/createuserr', async (req, res) => {
         const { title, description, price, vendor, category } = req.body;
         const count = req.body.rating?.count;
         const result = await pool.query(
-            'INSERT INTO product(name,description,price,vendor,category,quantity,created_on,updated_on)   VALUES ($1,$2,$3,$4,$5,$6,now(),now()) RETURNING *', [title, description, price, vendor, category,count]
+            'INSERT INTO product(name,description,price,vendor,category,quantity,created_on,updated_on)   VALUES ($1,$2,$3,$4,$5,$6,now(),now()) RETURNING *', [title, description, price, vendor, category, count]
 
 
         );
@@ -196,7 +258,7 @@ app.get('/getproductcount', async (req, res) => {
 // READ - Get all users with pagination
 app.get('/userr/:x', async (req, res) => {
     try {
-        var {x} = req.params
+        var { x } = req.params
         const result = await pool.query(`SELECT * FROM product where  quantity >= 1 order by livefee_updated_on asc LIMIT 10 OFFSET ${x}`);
 
         console.log("Inside GET 'product' AT: " + timeStamp());
@@ -211,7 +273,7 @@ app.get('/userr/:x', async (req, res) => {
 // READ - Get all products
 app.get('/allproducts/', async (req, res) => {
     try {
-        
+
         const result = await pool.query(`SELECT * FROM product`);
 
         console.log("Inside GET 'product' AT: " + timeStamp());
@@ -226,14 +288,14 @@ app.get('/allproducts/', async (req, res) => {
 // READ - Get all users
 app.get('/getproduct/byname/:x', async (req, res) => {
     try {
-        var { x} = req.params;
+        var { x } = req.params;
 
-        const result = await pool.query("SELECT * FROM product where name ilike  $1 ", [x+"%"]);
+        const result = await pool.query("SELECT * FROM product where name ilike  $1 ", ["%" + x + "%"]);
 
         console.log("Inside GET 'getproduct' AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.log(x+"    ");
+        console.log(x + "    ");
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -241,14 +303,14 @@ app.get('/getproduct/byname/:x', async (req, res) => {
 // READ - Get all users
 app.get('/getproduct/bysku/:x', async (req, res) => {
     try {
-        var { x} = req.params;
+        var { x } = req.params;
 
-        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", [x+"%"]);
+        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", ["%" + x + "%"]);
 
         console.log("Inside GET 'getproduct' AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.log(x+"    ");
+        console.log(x + "    ");
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -256,14 +318,14 @@ app.get('/getproduct/bysku/:x', async (req, res) => {
 // READ - Get all products by supplier
 app.get('/getproduct/bysupplier/:x/:y', async (req, res) => {
     try {
-        var { x,y} = req.params;
+        var { x, y } = req.params;
 
-        const result = await pool.query("SELECT * FROM product where supplier_code = $1 limit 15 offset $2 ", [x,y]);
+        const result = await pool.query("SELECT * FROM product where supplier_code = $1 ", [x]);
 
         console.log("Inside GET 'getproduct' by supplier_code AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.log(x+"    ");
+        console.log(x + "    ");
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -284,16 +346,17 @@ app.get('/lastupdate', async (req, res) => {
     }
 });
 
-// READ - Get single user
-app.get('/api/users/:id', async (req, res) => {
+// READ - Get products by supplier
+app.get('/api/getproducts/bysuppliercode/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        const result = await pool.query('SELECT * FROM product WHERE id = $1 ', [id]);
-        console.log("Inside GET by ID");
+        const  id  = req.params;
+        const result = await pool.query('SELECT * FROM product WHERE supplier_code = $1 ', [id]);
+        console.log("Supplier ", id);
+        console.log("products ", result.rows.length);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        res.json({ success: true, data: result.rows[0] });
+        res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -319,7 +382,7 @@ app.get('/api/sku/:sku', async (req, res) => {
 // UPDATE - Update user
 app.post('/updateproducts/:sku', async (req, res) => {
     try {
-       
+
         const rows = req.body.rows;
         const sku = req.params;
 
@@ -333,10 +396,10 @@ app.post('/updateproducts/:sku', async (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        console.log("Inside UPDATE, AT: "+ timeStamp());
+        console.log("Inside UPDATE, AT: " + timeStamp());
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {
-        
+
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -361,7 +424,7 @@ app.delete('/api/deleteuser/:sku', async (req, res) => {
 app.post('/api/updateproduct/:sku/:quantity', async (req, res) => {
     try {
         const { sku, quantity } = req.params;
-        const result = await pool.query('UPDATE FROM product SET quantity = $1 WHERE sku = $2', [quantity,sku]);
+        const result = await pool.query('UPDATE FROM product SET quantity = $1 WHERE sku = $2', [quantity, sku]);
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'PRODUCT not found' });
         }
@@ -382,33 +445,31 @@ app.post('/api/bulk-insert', async (req, res) => {
         const rows = req.body.rows;
         const supplier = req.body.supply;
         let status = null;
+        console.log("WEDCA :", supplier);
+        const supp_code = supplier.id;
 
-        const supp_code = supplier.id;  
+        console.log("supplier of bulk:", req.body.supply);
+        console.log("bulk:", rows);
 
-            console.log("supplier of bulk:",supp_code);
-            console.log("bulk:",rows);
-        
-            
+
         for (const row in rows) {
 
             console.log("0000");
             console.log(rows[row])
-           
+
 
             const result = await pool.query(
                 `INSERT INTO product (
             name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
          )
          VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9,NOW(),NOW(),15, $10, $11        
-         ) 
-
-         on conflict (sku)
-            DO UPDATE SET
-            price = EXCLUDED.price,
-            quantity = EXCLUDED.quantity,
-            mark_up = EXCLUDED.mark_up,
-            updated_on = Now() RETURNING*;`,
+            $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8        
+         ) ON CONFLICT (sku)
+         DO  UPDATE
+         SET price = EXCLUDED.price
+            ,quantity = EXCLUDED.quantity
+            ,mark_up = EXCLUDED.mark_up
+         RETURNING*;`,
                 [
                     rows[row].name,
                     rows[row].description,
@@ -416,10 +477,8 @@ app.post('/api/bulk-insert', async (req, res) => {
                     rows[row].price,
                     rows[row].delivery_cost,
                     rows[row].mark_up,
-                    0, // 7
-                    '',
-                    '',         
-                    '',
+                    rows[row].quantity, // 7
+
                     supp_code //12
 
 
@@ -429,12 +488,12 @@ app.post('/api/bulk-insert', async (req, res) => {
             console.log("Last operation:", result.rows);
         }
 
-        res.status(200).json({ success: true});
+        res.status(200).json({ success: true });
 
         console.log("Last operation:", status);
 
 
-        
+
 
 
 
@@ -442,11 +501,85 @@ app.post('/api/bulk-insert', async (req, res) => {
         console.error("Bulk insert error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
+}
+);
+
+
+///                         SYNTECH BULK OPERATIONS
+///                         SYNTECH BULK OPERATIONS
+/// 
+
+
+app.post('/api/bulk-update', async (req, res) => {
+    try {
+        const { rows, supply } = req.body;
+        const supp_code_id = supply.id;
+
+        console.log(`Starting bulk update for supplier: ${JSON.stringify(supp_code_id)}`);
+
+        //We use a map to create an array of promises
+        const updatePromises = rows.map(row => {
+            return pool.query(
+                `WITH updated AS (
+    UPDATE product
+    SET
+        price = $4,
+        quantity = $7,
+        delivery_cost = $5,
+        mark_up = $6,
+        -- Cast the unknown parameters to numeric to resolve the operator ambiguity
+        price_after_mark_up = ($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)),
+        updated_on = NOW()
+    WHERE sku = $3
+    RETURNING *
+)
+INSERT INTO product (
+    name, detailed_description, sku, price, delivery_cost,
+    mark_up, quantity, category, vendor, updated_on, created_on,
+    vat, description, supplier_code, price_after_mark_up
+)
+SELECT
+    $1, $2, $3, $4, $5, $6, $7, '', $9, NOW(), NOW(), 15, '', $8,
+    (($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)))
+WHERE NOT EXISTS (SELECT 1 FROM updated)
+RETURNING *;`,
+                [
+                    row.name || 'PRODUCT_ || id',
+                    row.description || '',
+                    row.sku,
+                    row.price || 0,
+                    row.delivery_cost || 0,
+                    row.mark_up || 0,
+                    row.quantity || 0,
+                    req.body.supply.id,
+                    req.body.supply.name
+                ]
+            );
+        });
+
+        // Execute all queries in parallel
+        await Promise.all(updatePromises);
+
+        res.status(200).json({ success: true, message: `Processed ${rows.length} rows.` });
+
+    } catch (error) {
+        console.error("Bulk update error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 
+
+//SYNTECH BULK OPERATIONS
 ///                         SYNTECH BULK OPERATIONS
 ///                         SYNTECH BULK OPERATIONS
+
+
+
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+// NOTE : ALL '/SYNTECH , ENDPOINTS REFER TO DATA THAT IS PULLLED FROM FEED , KEY WORD : * FROM *'
+
 
 
 
@@ -454,26 +587,33 @@ app.post('/api/bulk-insert', async (req, res) => {
 app.delete('/api/syntech/bulk-delete', async (req, res) => {
     try {
         const rows = req.body.rows;
+        const sup = req.body.supplier;
         let status = null;
+        var t = [];
 
-
-       
+        var p = req.body.rows[0];
+        console.log("my rows: ", p.length);
+        console.log("my sup: ", sup);
 
 
         for (const row of rows) {
+            // console.log(row);
             const result = await pool.query(
-                `DELETE FROM product WHERE sku = $1 ;`,
+                `DELETE FROM product WHERE sku = $1 returning *; `,
                 [
 
-                    row.sku,            //3
+                    row.sku           //3
+
+
                     //11 description
                 ]
             );
-
+            t.push(row.sku);
             status = result.command; // "INSERT" or "UPDATE"
         }
-
+        //  console.log(t);
         console.log("Last operation:", status);
+        console.log(rows.length);
         res.json({ success: true, status });
     } catch (error) {
         console.error("Bulk insert error:", error);
@@ -488,43 +628,45 @@ app.delete('/api/syntech/bulk-delete', async (req, res) => {
 app.post('/api/syntech/bulk-insert', async (req, res) => {
     try {
         const rows = req.body.rows;
+        const supp = req.body.supplier;
         let status = null;
 
 
-        
-            for (const row of rows) {
-                var qty = Number(Number(row.dbnstock) + Number(row.cptstock) + Number(row.jhbstock)) || 0;
-
-                const result = await pool.query(
-                    `INSERT INTO product (
-            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description, livefee_updated_on,data_source
+        console.log(rows);
+        for (const row of rows) {
+            var qty = Number(Number(row.dbnstock) + Number(row.cptstock) + Number(row.jhbstock)) || 0;
+            //console.log(row);
+            const result = await pool.query(
+                `INSERT INTO product (
+            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description, livefee_updated_on,supplier_code
          )
          VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 15.00, $11, $10,'syntech'
-         ) RETURNING*;`,
-                    [
-                        row.name,         //1
-                        row.description, //2  // detailed_description
-                        row.sku,            //3
-                        row.price,          //4
-                        row.delivery_cost,  //5
-                        row.recommended_margin, //6 // mark_up
-                        qty, //7 quantity
-                        row.categorytree,                           //8 category
-                        row.attributes?.brand || 'Unknown Vendor',                   //9 vendor
-                        row.last_modified,                       //10 livefee_updated_on
-                        row.shortdesc                       //11 description
-                    ]
-                );
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 15.00, $11, $10,$12
+         ) on conflict (sku)
+         do nothing RETURNING*;`,
+                [
+                    row.name,         //1
+                    row.description, //2  // detailed_description
+                    row.sku,            //3
+                    row.price,          //4
+                    row.delivery_cost,  //5
+                    row.recommended_margin, //6 // mark_up
+                    qty, //7 quantity
+                    row.categorytree,                           //8 category
+                    row.attributes?.brand || 'Unknown Vendor',                   //9 vendor
+                    row.last_modified,                       //10 livefee_updated_on
+                    row.shortdesc,
+                    supp.id]
+            );
 
-                status = result.command; // "INSERT" or "UPDATE"
+            status = result.command; // "INSERT" or "UPDATE"
 
             console.log("Last operation:", status);
-            
+
 
         }
-        
-    
+
+
 
     } catch (error) {
         console.error("Bulk insert error:", error);
@@ -533,31 +675,32 @@ app.post('/api/syntech/bulk-insert', async (req, res) => {
 });
 
 // Step 1: Begin transaction and perform CRUD
-app.post('/api/syntech/bulk-update', async (req, res) => {
-    
+app.put('/api/syntech/bulk-update', async (req, res) => {
+
     try {
-     
-        
+
+
         const rows = req.body.rows;
         const myresults = [];
 
         console.log("typeof myrows: ");
-        console.log(typeof rows.feedProd);
+        console.log(rows[0]);
 
         for (const row of rows) {
-            var qty = Number(Number(row.dbnstock) + Number(row.cptstock) + Number(row.jhbstock)) || 0;
-            
-
-            console.log("INSIDE 'SYNCDB' : "+row.sku);
 
 
 
-        const result = await pool.query(
-            `UPDATE product  SET quantity = $1, price=$2 where sku = $3 RETURNING *;
-           `, [qty, row.price, row.sku]
-            
-        );
-       
+
+            //         FROM FEED TO DATABASE 
+
+
+            const result = await pool.query(
+                `UPDATE product  SET mark_up = $1, price=$2 where sku = $3 RETURNING *;
+           `, [row.recommended_margin, row.price, row.sku]
+
+
+            );
+
 
 
 
@@ -567,12 +710,137 @@ app.post('/api/syntech/bulk-update', async (req, res) => {
             myresults.push(result);
 
         }
-            res.json({ success: true, message: 'Sync completed', data: myresults });
+        res.json({ success: true, message: 'Sync completed', data: myresults });
     } catch (error) {
-        console.log("SERVER ERR: "+error);
+        console.log("SERVER ERR: " + error);
+    }
+});
+app.put('/api/syntech/bulk-update-qty', async (req, res) => {
+
+    try {
+
+
+        const rows = req.body.rows;
+        const myresults = [];
+
+        console.log("typeof myrows: ");
+        console.log(rows[0]);
+
+        for (const row of rows) {
+
+
+
+
+            //         FROM FEED TO DATABASE 
+
+
+            const result = await pool.query(
+                `UPDATE product  SET quantity = $1 where sku = $2 RETURNING *;
+           `, [row.jhbstock + row.cptstock + row.dbnstock, row.sku]
+
+
+            );
+
+
+
+
+
+
+
+            myresults.push(result);
+
+        }
+        res.json({ success: true, message: 'Sync completed', data: myresults });
+    } catch (error) {
+        console.log("SERVER ERR: " + error);
     }
 });
 
+
+
+
+
+
+
+app.post('/api/bulk-upsert', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+        /// const supplier = req.body.supply;
+        let status = null;
+
+
+
+        //console.log("supplier of bulk:", req.body);
+        //console.log("bulk:", rows);
+
+
+
+
+
+
+
+
+        //var t = Object.keys(rows[0]);
+        //console.log(t);
+
+
+
+
+
+        console.log(typeof Object.keys(rows[0]).join(","), " cols")
+        // res.status(200).json({ success: true });
+        //for (const row in rows) {
+
+        //    console.log("0000");
+
+
+        //    const result = await pool.query(
+        //        `INSERT INTO product (
+        //    name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
+        // )
+        // VALUES (
+        //    $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8
+        // ) ON CONFLICT (sku)
+        // DO  UPDATE
+        // SET price = EXCLUDED.price
+        //    ,quantity = EXCLUDED.quantity
+        //    ,mark_up = EXCLUDED.mark_up
+        // RETURNING*;`,
+        //        [
+        //            rows[row].name,
+        //            rows[row].description,
+        //            rows[row].sku,
+        //            rows[row].price,
+        //            rows[row].delivery_cost,
+        //            rows[row].mark_up,
+        //            rows[row].quantity, // 7
+
+        //            supp_code //12
+
+
+        //        ]
+        //    );
+        //status = result.command; // "INSERT" or "UPDATE"
+        //  console.log("Last operation:", result.rows);
+        //}
+
+
+
+        res.status(200).json({ success: true });
+
+        console.log("Last operation:", status);
+
+
+
+
+
+
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+);
 
 
 
@@ -618,7 +886,7 @@ app.post('/rollback/:transactionId', async (req, res) => {
 });
 
 
- 
+
 
 
 ///                         VENDOR ROUTES BELOW
@@ -641,24 +909,13 @@ app.get('/vendors', async (req, res) => {
 
 
 
-// READ - Get all vendors
-app.get('/vendors', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM vendor');
-
-        console.log("Inside GET all vendors : " + timeStamp());
-        res.json({ success: true, data: result.rows });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-})
 // READ - Get a vendor
 app.get('/vendor/:id', async (req, res) => {
 
     const id = req.params;
 
     try {
-        const result = await pool.query('SELECT * FROM vendor where id = $1',[id]);
+        const result = await pool.query('SELECT * FROM vendor where id = $1', [id]);
 
         console.log("Inside GET a vendor : " + timeStamp());
         res.json({ success: true, data: result.rows });
@@ -672,7 +929,7 @@ app.get('/vendor/byname/:name', async (req, res) => {
     const name = req.params.name;
     var t = "";
     console.log(name);
-    for (let i = 0; i <= name.length-1; i++) {
+    for (let i = 0; i <= name.length - 1; i++) {
 
 
         console.log(name[i])
@@ -691,10 +948,10 @@ app.get('/vendor/byname/:name', async (req, res) => {
     }
 
 
-    console.log("name :",t);
+    console.log("name :", t);
 
 
-    
+
     console.log("**");
     try {
         const result = await pool.query('SELECT * FROM vendor where name ilike $1', [t]);
@@ -713,9 +970,12 @@ app.get('/vendor/byname/:name', async (req, res) => {
 // CREATE - Add new VENDOR
 app.post('/createvendor', async (req, res) => {
     try {
-        const { name, contact, contact_name, email, address } = req.body;
+        const { name, phone, contact_name, email, address } = req.body.fom;
+        const data_format = req.body.dataformat;
+
+
         const result = await pool.query(
-            'INSERT INTO vendor (name,contact,contact_name,email,address,created_at)  VALUES ($1,$2,$3,$4,$5,now()) RETURNING *', [name, contact, contact_name, email, address]
+            'INSERT INTO vendor (name,contact,contact_name,email,address,data_format,created_at)  VALUES ($1,$2,$3,$4,$5,$6,now()) RETURNING *', [name, phone, contact_name, email, address, data_format]
 
 
         );
@@ -724,7 +984,7 @@ app.post('/createvendor', async (req, res) => {
         console.log("Inside CREATE vendor AT: " + timeStamp());
 
 
-        res.status(201).json({ success: true, data: result.rows[0]  });
+        res.status(201).json({ success: true, data: result.rows[0] });
 
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -743,7 +1003,7 @@ app.post("/api/update-csv", async (req, res) => {
 
     try {
         // Clear existing data (optional, depends on your use case)
-       
+
 
         // Insert updated rows
         for (const row of rows) {
@@ -766,13 +1026,14 @@ app.post("/api/update-csv", async (req, res) => {
 
 
 // UPDATE - Update vendor
-app.put('/updatevendor/:id', async (req, res) => {
+app.post('/updatevendor', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, contact, contact_name, email, address } = req.body;
+
+        const { name, contact, contact_name, email, address, id, data_format } = req.body;
+
         const result = await pool.query(
-            'UPDATE vendor SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5 WHERE id = $6 RETURNING *',
-            [name, contact, contact_name, email, address, id]
+            'UPDATE vendor SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7  WHERE id = $6 RETURNING *',
+            [name, contact, contact_name, email, address, id, data_format]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
@@ -780,6 +1041,31 @@ app.put('/updatevendor/:id', async (req, res) => {
 
         console.log("Inside vendor UPDATE, AT: " + timeStamp());
         res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        console.log(req.body);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+app.delete('/deletevendor', async (req, res) => {
+    try {
+
+        const rows = req.body.rows;
+
+        console.log(rows, " data");
+
+        console.log(BuildQuery("insert", rows));
+        for (const row of rows) {
+            const result = await pool.query(
+                'DELETE FROM vendor WHERE name = $1 AND id = $2 RETURNING *',
+                [row.name, row.id]
+            );
+        }
+
+        console.log("Inside vendor DELETE, AT: " + timeStamp());
+        res.json({ success: true });
     } catch (error) {
 
         res.status(500).json({ success: false, error: error.message });
@@ -789,7 +1075,7 @@ app.put('/updatevendor/:id', async (req, res) => {
 
 // fetch columns for comparision
 app.get("/api/db-columns", async (req, res) => {
-    const columns = ["price", "name", "sku", "description", "delivery_cost", "category", "mark_up","quantity","vendor","vat"]; // Example: fetch from DB schema
+    const columns = ["price", "name", "sku", "description", "delivery_cost", "category", "mark_up", "quantity", "vendor", "vat"]; // Example: fetch from DB schema
     res.json({ success: true, columns });
 });
 
@@ -800,7 +1086,4 @@ app.get("/api/db-columns", async (req, res) => {
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
-
-
-
 
