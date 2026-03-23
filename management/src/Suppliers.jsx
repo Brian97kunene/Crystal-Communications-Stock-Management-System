@@ -3,6 +3,7 @@ import Prods from './productsTable.jsx'
 import CreateSupplier from "./createSupplier.jsx";
 import Upload from './ReadAFile.jsx'
 import EditSupp from './EditSupplier.jsx'
+import Manual_inputs from './Manual_Inputs.jsx'
 import Livefeed_Updates from './Livefeed_Updates.jsx'
 
 const Suppliers = () => {
@@ -12,6 +13,7 @@ const Suppliers = () => {
     const [activeSupplierId, setActiveSupplierId] = useState(null);
     const [showTbl, setshowTbl] = useState(false)
     const [upload, setupload] = useState(false)
+    const [manualupload, setmanualupload] = useState(false)
     const [edit, setedit] = useState(false)
     const [updates, setupdates] = useState(true)
     const [editsuppliers, seteditsuppliers] = useState(false)
@@ -337,6 +339,10 @@ const Suppliers = () => {
                                 <button onClick={() => setupload(!upload)}>Update Products</button>
 
                                 }
+                                {supplier.data_format === "Manual" &&
+                                                <button onClick={() => setmanualupload(!manualupload)}>Update Manual Products</button>
+
+                                }
                                 {supplier.data_format === "Live Feed" &&
                                     <button onClick={() => setupdates(!updates)}>Check for Updates</button>
 
@@ -352,6 +358,17 @@ const Suppliers = () => {
 
 
                                         <Upload supplier={supplier} />
+                                        </div>)
+                                    }
+                                    
+                                        </div>
+                                <div style={{ display: "flex", justifyContent: "right" }} >
+
+                                    {manualupload && supplier.data_format === "Manual" && (<div>
+                                    <br/>
+
+
+                                                    <Manual_inputs supplier={supplier} />
                                         </div>)
                                     }
                                     

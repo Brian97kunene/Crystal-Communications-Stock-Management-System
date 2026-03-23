@@ -379,12 +379,17 @@ const ProductTable = ({ initialProducts }) => {
                             </th>
 
                           
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            {/*{Object.keys(productList[0]).map((col, indx) =>*/}
 
-                            {/*{Object.keys(productList).map((col, indx) =>*/}
+                            {/*    <th key={indx}>{col}*/}
 
-                            {/*    <th key={indx}>{col}</th>*/}
 
-                            {/*)}*/}
+                            {/*    </th>)}*/}
+                          
           <th>
             <br/>
             <input 

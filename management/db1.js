@@ -975,7 +975,10 @@ app.post('/createvendor', async (req, res) => {
         const { name, phone, contact_name, email, address } = req.body.fom;
         const data_format = req.body.dataformat;
 
+        console.log(req.body);
 
+
+        console.log(`${name}, ${phone}, ${contact_name}, ${email}, ${address}`);
         const result = await pool.query(
             'INSERT INTO vendor (name,contact,contact_name,email,address,data_format,created_at)  VALUES ($1,$2,$3,$4,$5,$6,now()) RETURNING *', [name, phone, contact_name, email, address, data_format]
 
