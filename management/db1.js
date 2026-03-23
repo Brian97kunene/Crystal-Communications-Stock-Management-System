@@ -198,11 +198,17 @@ WHERE supplier_code = $1 RETURNING *; `
 });
 
 // CREATE - Add new user
-app.post('/createuser', async (req, res) => {
+app.post('/createproduct', async (req, res) => {
     try {
-        const { name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category } = req.body;
+        const { name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category } = req.body.product;
+        const supp = req.body.supplier_code;
+
+
+        console.log(req.body);
+        console.log(name);
+
         const result = await pool.query(
-            'INSERT INTO product (name,sku,description,price,delivery_cost,mark_up,vat,vendor,quantity,category)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category]
+            'INSERT INTO product (name,sku,description,price,delivery_cost,mark_up,vat,vendor,quantity,category,supplier_code)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *', [name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category, supp]
 
 
         );

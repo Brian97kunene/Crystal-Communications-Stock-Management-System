@@ -3,7 +3,7 @@ import EditProd from './MyForm - Copy.jsx'
 import Dom from './antiDOM approach.jsx' 
 import './UsersStyle.css'
 
-const ProductsTable = ({ val, close, supplier }) => {
+const ProductsTable = ({ val, close, supplier, refresh }) => {
 
     const [products, setProducts] = useState([]);
     const [editproduct, seteditProduct] = useState([]);
@@ -271,7 +271,7 @@ const ProductsTable = ({ val, close, supplier }) => {
                                     <EditProd product={editproduct} val={popUp} close={() => setpopUp(false)} />
                                 </>
                                 }
-                                <Dom initialProducts={products} />
+                                <Dom initialProducts={products} refresh={refresh} />
                             </div>
                             <nav aria-label="Page navigation example">
                                 <ul class="pagination justify-content-center">

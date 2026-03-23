@@ -9,7 +9,7 @@ const ProductTable = ({ initialProducts }) => {
 
     useEffect(() => {
         setProductMap(new Map(initialProducts.map(p => [p.sku, p])));
-        console.log("INITIALLY: ", initialProducts);
+       // console.log("INITIALLY: ", initialProducts);
 
         if (initialProducts.length > 0) {
             setselectedSupp(initialProducts[0].supplier_code);
@@ -17,6 +17,7 @@ const ProductTable = ({ initialProducts }) => {
              setsearchbyfield("Name");
         }
     }, [initialProducts]);
+
 
 
 
@@ -35,8 +36,7 @@ const ProductTable = ({ initialProducts }) => {
     const [searchproducts, setsearchproducts] = useState([]);
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false);
-
-
+    const [refresh, setrefresh] = useState(0);
 
 
 
@@ -365,8 +365,12 @@ const ProductTable = ({ initialProducts }) => {
                 }
             </>)}
             <div class="table-container">
-            
-      
+
+
+                {refresh &&
+
+                    <div>
+
       <table className="table table-striped">
       <thead>
         <tr>
@@ -477,6 +481,13 @@ const ProductTable = ({ initialProducts }) => {
 
       </tbody>
     </table>
+                    </div>
+                    
+                    
+                }
+
+                {refresh}
+                <button onClick={() => setrefresh(pre =>  pre + 1)}>Reload</button>
       </div>
       </div>
   );

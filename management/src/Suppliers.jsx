@@ -17,6 +17,7 @@ const Suppliers = () => {
     const [edit, setedit] = useState(false)
     const [updates, setupdates] = useState(true)
     const [editsuppliers, seteditsuppliers] = useState(false)
+    
     const [supps, setsupps] = useState([]);
 
 
@@ -380,15 +381,15 @@ const Suppliers = () => {
                                         <Livefeed_Updates supplier={supplier} update={updates} setupd={() => setupdates(!updates)} />
                                     </div>
 
-                                }
-
+                                            }
+                                            {/*<button onClick={ setrefresh(!refresh) }>REFRESH PRODUCTS</button>*/}
 
                                 {showTbl && <>
 
                                     
                                 {
-                                    supplier && <>
-                                            <Prods val={showTbl} close={() => { setshowTbl(!showTbl) }} supplier={supplier} /> 
+                                                    supplier && <>
+                                                        <Prods val={showTbl} close={() => { setshowTbl(!showTbl) }} supplier={supplier}  /> 
                                          
                                     </>
                                 }

@@ -5,8 +5,9 @@ import MyClass from './MyMethods.js'
 import searchTbl from './SearchTable.jsx'
 const Manual_Inputs = ({ supplier }) => {
     const [products, setProducts] = useState([]);
+    const [addproducts, setaddProduct] = useState(false);
     var t = [];
-
+    const [formValues, setFormValues] = useState({});
     useEffect(() => {
         const fetchUsers = async () => {
 
@@ -47,7 +48,27 @@ const Manual_Inputs = ({ supplier }) => {
         fetchUsers();
     }, []);
 
-    const columnsToExclude = ['id', 'detailed_description']
+
+
+
+    const handleChange = (col) => (e) => {
+        const value = e.target.value;
+        setFormValues(prev => ({ ...prev, [col]: value }));
+    }
+
+    const handleSubmit = () => {
+
+
+        console.log(formValues);
+
+
+        console.log(MyClass.insertProduct(formValues, supplier.id));
+
+    }
+
+
+
+    const columnsToExclude = ['id', 'detailed_description', "created_on", 'updated_on', '	livefee_updated_on', 'data_source', 'vat', 'delivery_cost', 'supplier_code','livefee_updated_on']
 
     return (
 
@@ -67,7 +88,7 @@ const Manual_Inputs = ({ supplier }) => {
 
         <table className="table table-striped">
                     <thead><tr>
-                        {Object.keys(products[0]).map(col => { return <><th key={col.id}>{col.toUpperCase()}</th></> })}
+                        {Object.keys(products[0]).map(col => { return <><th key={col.id}>{col}</th></> })}
 
                 </tr>
             </thead>
@@ -86,12 +107,28 @@ const Manual_Inputs = ({ supplier }) => {
                             )}
                            
 
-                        </tr>
-                            )}  
+                                </tr>
+                        )}  
+                        
+                        
             </tbody>
         </table>
             
-            )  : <p>No products found.</p>}
+            ) : <p>No products found.</p>}
+
+            <div style={{ width: "90%", display: "flex", justifyContent: "right" }}>
+                <button onClick={() =>setaddProduct(!addproducts)}>Add New</button>
+                            </div>
+            { addproducts && (<>
+
+                {Object.keys(products[0]).filter((col => !columnsToExclude.includes(col))).map(col => { return <><input style={{ padding: "5px", margin: "5px", borderRadius: "5px" }} placeholder={col} key={col.id} onChange={handleChange(col)}></input></> })}
+
+
+
+                <button onClick={handleSubmit}>CREATE</button>
+
+            </>
+            )}
         </div>
     );
 

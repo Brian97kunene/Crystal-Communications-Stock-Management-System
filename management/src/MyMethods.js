@@ -17,6 +17,77 @@ class MyClass {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+    static async insertProduct(product, supp_code) {
+        const port = 5552;
+
+        try {
+           
+
+           
+            const response = await fetch(`http://localhost:${port}/createproduct`, {
+                method: "POST", // or "PATCH" if partial updates
+                headers: {
+                    "Content-Type": "application/json"
+
+                },
+                body: JSON.stringify({
+                    product: product,
+                    supplier_code: supp_code
+                }),
+            });
+
+            //var prod = JSON.stringify( x ) ;
+
+
+
+            return response;
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     static async getLiveProducts() {
 
 
@@ -134,6 +205,7 @@ class MyClass {
 
 
     }
+   
 
 
 
