@@ -5,6 +5,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Users from './Users.jsx'
 import Suppliers from './Suppliers.jsx'
+import Man from './Manual_Inputs.jsx'
 
 
 
@@ -19,6 +20,8 @@ createRoot(document.getElementById('root')).render(
         
         
         <Users />
+        <Man />
+
         <Suppliers />
 
         <Prod/>

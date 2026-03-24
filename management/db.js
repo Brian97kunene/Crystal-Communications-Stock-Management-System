@@ -592,7 +592,7 @@ app.delete('/api/syntech/bulk-delete', async (req, res) => {
         let status = null;
         var t  = [];
 
-        var p = req.body.rows[0];
+        var p = req.body.rows;
         console.log("my rows: ", p.length);
         console.log("my sup: ", sup);
 
@@ -696,8 +696,8 @@ app.put('/api/syntech/bulk-update', async (req, res) => {
          
 
         const result = await pool.query(
-            `UPDATE product  SET mark_up = $1, price=$2 where sku = $3 RETURNING *;
-           `, [row.recommended_margin, row.price, row.sku]
+            `UPDATE product  SET mark_up = $1, price=$2 , quantity = $3 where sku = $4 RETURNING *;
+           `, [row.recommended_margin, row.price, row.cptstock + row.jhbstock + row.dbnstock, row.sku]
 
 
         );

@@ -58,7 +58,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
             setproducts(data.data);
             // setupdates(!updates);
-           // setlivefeed_products(feed.products);
+           setlivefeed_products(feed.products);
           //  console.log(data.data.length);
             //console.log(feed.products.length);
             //setproducts(data.data );
@@ -66,7 +66,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
 
             checkUpdates(data.data, livefeed_data.products);
-          //  checkUpdates(data.data, feed.products);
+           //checkUpdates(data.data, feed.products);
 
 
 
@@ -81,6 +81,16 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
 
     const checkUpdates = (dbproducts,livefeedproducts) => {
+
+
+        setLoading(true);
+        setProgress(0);
+
+        // Simulate progress increments while fetching
+        const interval = setInterval(() => {
+            setProgress((prev) => (prev <= 75 ? prev + 10 : prev));
+        }, 100);
+
 
 
         console.log(dbproducts);
@@ -151,17 +161,22 @@ function Livefeed_Updates({ supplier,setupd,update}) {
         });
 
 
-      
+        clearInterval(interval);
 
         // 3. Update the UI
 
         if (results.newProducts.length + results.priceMismatched.length + results.qtyMismatched.length + results.deletedProducts.length > 0) {
             console.log("Prod Updated!");
+            console.log(results.newProducts.length + results.priceMismatched.length + results.qtyMismatched.length + results.deletedProducts.length);
+        }
+        else {
+            console.log(results.newProducts.length + results.priceMismatched.length + results.qtyMismatched.length + results.deletedProducts.length," Updates due!");
+
         }
             setupdatedProds(results);
 
         setLoading(false);
-
+        setProgress(0);
 
         console.log(results);
 
@@ -534,6 +549,10 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
 
                   <div className="container mt-1">
+
+
+
+
                       <div className="d-flex justify-content-between align-items-center mb-4">
                           <h2>Product Sync Dashboard</h2>
                           <button

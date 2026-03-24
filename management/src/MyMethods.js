@@ -34,6 +34,23 @@ class MyClass {
 
 
     }
+    static async getAllDbProducts() {
+
+
+
+        try {
+            
+            var response = await fetch("http://localhost:5552/allproducts/");
+
+            const data = await response.json();
+            console.log(data);
+            return data.data ;
+        }
+        catch(err)
+        { console.log(err); }
+
+
+    }
     static async getProducts() {
         const port = 5552;         
 
@@ -53,7 +70,7 @@ class MyClass {
         try {
             let prods = [];
             products.forEach((i) => {
-                prods.push({ sku:i });
+                prods.push(i);
       
                // console.log("these are ", i);
               //  console.log("sup ", supp_code);
