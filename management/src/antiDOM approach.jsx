@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import MyClass from './MyMethods.js'
 import searchTbl from './SearchTable.jsx'
+
 const ProductTable = ({ initialProducts }) => {
   // 1. Store products in a Map for fast O(1) updates
   const [productMap, setProductMap] = useState(new Map(initialProducts.map(p => [p.sku, p])));
@@ -90,9 +91,9 @@ const ProductTable = ({ initialProducts }) => {
     }
 
 
-  const handleSaveAll = async () => {
+  const sync = async () => {
 
-      var t = await MyClass.getProducts();
+      var t = await MyClass.syncProducts(selectedSkus);
 
 
       console.log(t);
@@ -308,8 +309,8 @@ const ProductTable = ({ initialProducts }) => {
                 <option>SKU</option>
                 </select>
 
-                <button  onClick={search_}>SEARch</button>
-                <button onClick={upsert}>UPSERT</button>
+                <button  onClick={search_}>SEARCH</button>
+               {/* <button onClick={upsert}>UPSERT</button>*/}
                
 
 
@@ -328,7 +329,7 @@ const ProductTable = ({ initialProducts }) => {
 
             {searchTerm && (<><h1 style={{ marginTop: "0px", marginRight: "00px" }}>Showing Database results of: "{searchTerm}"</h1>
            
-                {(searchproducts.length > 0) && (< div class="wrapper" style={{
+                {(searchproducts.length > 0) && (< div class="wrappe" style={{
                     width: "100%",
                     marginLeft: "0px"
                 }} >
@@ -366,7 +367,20 @@ const ProductTable = ({ initialProducts }) => {
             </>)}
             <div class="table-container">
             
-      
+                <button onClick={() => { handleSaveAll_() }}>PREVIEW</button>
+                <button onClick={() => { handleSaveAll_(true) }}>SAVE </button>
+                <button onClick={() => { sync() }}>SYNC SELECTED</button>
+                <button onClick={deleteProduct}>Delete</button><input
+                    type="text"
+                    value={bulkDelivery}
+                    onChange={(e) => setBulkDelivery(e.target.value)}
+                    placeholder="Delivery Cost..."
+                /><input
+                    type="text"
+                    value={bulkMarkup}
+                    onChange={(e) => setBulkMarkup(e.target.value)}
+                    placeholder="Markup % ..."
+                />
       <table className="table table-striped">
       <thead>
         <tr>
@@ -377,37 +391,25 @@ const ProductTable = ({ initialProducts }) => {
                       checked={productList.length > 0 && selectedSkus.size === productList.length}
                   />
                             </th>
-
+<th>NAME</th>
+<th>SKU</th>
+<th>PRICE</th>
+<th>PRICE + MARK_UP</th>
+<th>DELIVERY_COST</th>
+<th>MARK_UP</th>
+<th>QUANTITY</th>
+<th>LAST_UPDATE</th>
+<th>Is Synced?</th>
+<th>Is Duplicate?</th>
+<th></th>
                           
 
-                            {/*{Object.keys(productList).map((col, indx) =>*/}
+                            {/*{Object.keys(productList[0]).filter((col) => !columnsToExclude.includes(col)).map((col, indx) =>*/}
 
                             {/*    <th key={indx}>{col}</th>*/}
 
                             {/*)}*/}
-          <th>
-            <br/>
-            <input 
-              type="text" 
-              value={bulkDelivery} 
-              onChange={(e) => setBulkDelivery(e.target.value)} 
-              placeholder="Delivery Cost..."
-            />
-          </th>
-          <th>
-            
-            <input 
-              type="text" 
-              value={bulkMarkup} 
-              onChange={(e) => setBulkMarkup(e.target.value)} 
-              placeholder="Markup % ..."
-            />
-          </th>
-          <th>QTY</th>
-          <th>LAST UPDATE</th>
-                            <th><button onClick={() => { handleSaveAll_() }}>PREVIEW</button>
-                                <button onClick={() => {handleSaveAll_(true)}}>SAVE </button>
-                  <button onClick={deleteProduct}>Delete</button></th>
+        
         </tr>
       </thead>
           <tbody>
@@ -456,9 +458,14 @@ const ProductTable = ({ initialProducts }) => {
                       </>
                       }
                       {row.updated_on && <td >{MyClass.formatDate(row.updated_on)} </td> }
-                      <td><button onClick={() => show(row)} > Show</button> 
-                      <button onClick={() => handleSaveAll()} > Delete</button>
-                     <button onClick={() => seteditting(!editting)} > Mod</button></td>
+             
+                
+                      <td>{typeof row.is_synced === "boolean" ? row.is_synced.toString().toUpperCase() : row.is_synced}</td>
+                      {row.is_duplicate.toString() === "true" ?
+
+                          <td ><p className="alert-danger alert" style={{ textAlign: "center" }} >YES</p></td> : <td ><p className="alert-success alert" style={{ textAlign: "center" }} >NO</p></td>
+                      }
+                     
           </tr>
                         ))}
 

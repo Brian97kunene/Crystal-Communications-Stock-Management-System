@@ -109,6 +109,99 @@ class MyClass {
 
     }
 
+    static async syncProducts(products) {
+        const port = 5552;
+        
+
+        try {
+            let prods = [];
+            products.forEach((i) => {
+                prods.push(i);
+      
+               // console.log("these are ", i);
+              //  console.log("sup ", supp_code);
+            }
+            
+            );
+        console.log(prods);
+                const response =  await fetch(`http://localhost:${port}/api/sync`, {
+                    method: "POST", // or "PATCH" if partial updates
+                    headers: {
+                        "Content-Type": "application/json"
+
+                    },
+                    body: JSON.stringify({
+                        rows: prods,
+                      
+                    }),
+                });
+
+                //var prod = JSON.stringify( x ) ;
+
+                
+
+                return response;
+
+            }
+            catch (err) {
+
+               
+
+                return err;
+
+        };
+
+
+
+    }
+
+
+    static async unsyncProducts(products) {
+        const port = 5552;
+        
+
+        try {
+            let prods = [];
+            products.forEach((i) => {
+                prods.push(i);
+      
+               // console.log("these are ", i);
+              //  console.log("sup ", supp_code);
+            }
+            
+            );
+        console.log(prods);
+                const response =  await fetch(`http://localhost:${port}/api/unsync`, {
+                    method: "POST", // or "PATCH" if partial updates
+                    headers: {
+                        "Content-Type": "application/json"
+
+                    },
+                    body: JSON.stringify({
+                        rows: prods,
+                      
+                    }),
+                });
+
+                //var prod = JSON.stringify( x ) ;
+
+                
+
+                return response;
+
+            }
+            catch (err) {
+
+               
+
+                return err;
+
+        };
+
+
+
+    }
+
 
     static async insertProducts(products, supp_code) {
         const port = 5552;
@@ -156,6 +249,8 @@ class MyClass {
 
 
 
+
+
     static async updateProducts(products, supp_code) {
         const port = 5552;
 
@@ -197,6 +292,10 @@ class MyClass {
 
 
     }
+
+
+
+
 
 
 }

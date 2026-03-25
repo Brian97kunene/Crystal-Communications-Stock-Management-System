@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Prods from './productsTable.jsx'
+import MyClass from './MyMethods.js'
 import CreateSupplier from "./createSupplier.jsx";
 import Upload from './ReadAFile.jsx'
 import EditSupp from './EditSupplier.jsx'
+import Manual_inputs from './Manual_inputs.jsx'
 import Livefeed_Updates from './Livefeed_Updates.jsx'
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Suppliers = () => {
 
@@ -12,6 +16,7 @@ const Suppliers = () => {
     const [activeSupplierId, setActiveSupplierId] = useState(null);
     const [showTbl, setshowTbl] = useState(false)
     const [upload, setupload] = useState(false)
+    const [manualupload, setmanualupload] = useState(false)
     const [edit, setedit] = useState(false)
     const [updates, setupdates] = useState(true)
     const [editsuppliers, seteditsuppliers] = useState(false)
@@ -276,12 +281,12 @@ const Suppliers = () => {
             </>} 
 
             <ol>
-                {supps && <>
+                {supps.length >= 1 && <>
                     <button onClick={() => deleteProducts(l)}>DELETE MARKED SUPPLIERS 
                 </button><br />
                     </> 
             }
-                <button style={{ display:"sticky" , position:"static" }} onClick={() => setrefresh(prev => !prev)}>Refresh</button>
+                <button style={{ display:"sticky" , position:"static" }} onClick={() => setrefresh(prev => !prev)}></button>
 
                     <div class="accordion" id="accordionUpdates">
                         { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
@@ -322,7 +327,7 @@ const Suppliers = () => {
                                         <h4>Contact: {supplier.contact}</h4>
                                         <h4>Business Address: {supplier.address}</h4>
                                         <h4>Data Format: {supplier.data_format}</h4>
-                                <h4>Last Update: {supplier.created_at}</h4>
+                                            <h4>Last Update: {MyClass.formatDate(supplier.created_at)}</h4>
                                 {edit && <div>
                                     <br />
 
@@ -333,8 +338,12 @@ const Suppliers = () => {
                                 <h4>{supplier.contact_person}</h4>
                                 <button onClick={() => setshowTbl(!showTbl)}>View Products</button>
 
-                                {supplier.data_format !== "Live Feed" &&
+                                            {supplier.data_format === "XML" || supplier.data_format === "CSV" &&
                                 <button onClick={() => setupload(!upload)}>Update Products</button>
+
+                                }
+                                {supplier.data_format === "Manual" &&
+                                <button onClick={() => setmanualupload(!manualupload)}>Update Products</button>
 
                                 }
                                 {supplier.data_format === "Live Feed" &&
@@ -347,11 +356,18 @@ const Suppliers = () => {
 
                                 <div style={{ display: "flex", justifyContent: "right" }} >
 
-                                    {upload && supplier.data_format !== "Live Feed" && (<div>
+                                                {upload && (supplier.data_format === "XML" || supplier.data_format === "CSV") && (<div>
                                     <br/>
 
 
                                         <Upload supplier={supplier} />
+                                        </div>)
+                                    }
+                                    {manualupload && supplier.data_format === "Manual" && (<div>
+                                    <br/>
+
+
+                                                    <Manual_inputs supplier={ supplier} />
                                         </div>)
                                     }
                                     
@@ -401,7 +417,7 @@ const Suppliers = () => {
 
 
 
-            <button onClick={() => setrefresh(prev => !prev)}>refresh</button>
+     
 
 
 

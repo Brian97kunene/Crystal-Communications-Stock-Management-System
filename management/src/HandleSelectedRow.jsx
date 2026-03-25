@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Pop from "./App.jsx";
 import feed from "./syntech-feed.json";
 import SearchTable from "./SearchTable.jsx";
+import Man from './Synced_Products.jsx'
 function ManualRowSelection() {
 
     const [liveproducts, setliveproducts] = useState([]);
@@ -30,6 +31,7 @@ function ManualRowSelection() {
     const [loading, setLoading] = useState(false);
     const [refresh, setrefresh] = useState(false);
     const [fals, setFals] = useState(false);
+    const [showsynced, setshowsynced] = useState(false);
 
 
 
@@ -176,6 +178,10 @@ function ManualRowSelection() {
 
     return (
         <div className="Live_Feed">
+
+           
+
+
             {loading && (<>
 
                 <h1 style={{ color: "#0c086b" }} onClick={() => searchTerm("")} disabled={loading}>
@@ -185,11 +191,11 @@ function ManualRowSelection() {
                     <div className="progress-bar" style={{ width: `${progress}%`}}>{progress}%</div>
                 </div></>
             )}
-            <button onClick={() => setrefresh(prev => !prev)}>refresh</button>
+            {/*<button onClick={() => setrefresh(prev => !prev)}>refresh</button>*/}
        
         
 
-            <h2 style={{ padding: "50px", marginTop: "0px", marginLeft: "00px", color: "#0c086b", fontFamily: "Century Schoolbook" }}   >Live Feed:</h2> <h1 style={{ marginTop: "-103px", marginLeft: "345px", color: "#0c086b", fontWeight: "bold", fontFamily: "Century Schoolbook" }}>[ {liveproducts.length} ]  Products {lastUpdates}  </h1>  
+            {/*<h2 style={{ padding: "50px", marginTop: "0px", marginLeft: "00px", color: "#0c086b", fontFamily: "Century Schoolbook" }}   >Live Feed:</h2> <h1 style={{ marginTop: "-103px", marginLeft: "345px", color: "#0c086b", fontWeight: "bold", fontFamily: "Century Schoolbook" }}>[ {liveproducts.length} ]  Products {lastUpdates}  </h1>  */}
 
            
             {/* Search table showing results */}
@@ -199,18 +205,18 @@ function ManualRowSelection() {
             {/* Search table showing results */}
 
 
-            <div class="search_area">
-                <span style={{ marginTop: "10px", marginLeft: "00px" }}>SEARCH FEED:</span>
-                <input type="text" id="search_feed" onChange={() => search()} placeholder="Search products..."
-                    style={{ marginTop: "10px", marginBottom: "10px", marginRight: "20px", padding: "5px", width: "250px" }}
-                />
-            </div>
+            {/*<div class="search_area">*/}
+            {/*    <span style={{ marginTop: "10px", marginLeft: "00px" }}>SEARCH FEED:</span>*/}
+            {/*    <input type="text" id="search_feed" onChange={() => search()} placeholder="Search products..."*/}
+            {/*        style={{ marginTop: "10px", marginBottom: "10px", marginRight: "20px", padding: "5px", width: "250px" }}*/}
+            {/*    />*/}
+            {/*</div>*/}
 
             {searchTerm && (<><h1 style={{ marginTop: "0px", marginRight: "00px" }}>Feed Results for: "{searchTerm}"</h1>
 
                 <SearchTable data={liveproducts} search={searchTerm} />
                 </>)}
-            {"AAA"}
+          
 
             {fals && <><table class="table table-striped">
                 <thead>
@@ -254,19 +260,17 @@ function ManualRowSelection() {
 
             </>}
 
-                {
-                    liveproducts.length > 0 &&
-                    <>
-                    <button style={{ marginTop: "10px", marginLeft: "520px", marginBottom: "50px", padding: "5px", width: "250px", visibility:"hidden" }} onClick={() => addToDb(liveproducts)}>SYNC DB</button>
-                    </>
-                }
+             
 
 
-
+            <div style={{display:"flex",justifyContent:"center",margin:"20px 0px 0px 0px"}}>
+            <button onClick={() => setshowsynced(!showsynced)}>SHOW SYNCED PRODUCTS
+            </button>
+            </div>
+            {showsynced && < Man />}
 
             <button style={{ marginTop: "10px", marginLeft: "520px", marginBottom: "50px", padding: "5px", width: "250px", visibility: "hidden" }} onClick={() => setrefresh(prev => !prev )}>REFRESH TABLE</button>
             <Pop products={liveproducts} refresh={refresh} />
-           
 
         </div>
     );

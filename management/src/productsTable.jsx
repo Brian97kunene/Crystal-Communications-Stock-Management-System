@@ -286,7 +286,7 @@ const ProductsTable = ({ val, close, supplier }) => {
 
 
               
-                        <button onClick={close}>Close</button>
+                        
                     </div>
                 </div>
             )}

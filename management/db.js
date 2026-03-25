@@ -220,12 +220,17 @@ app.post('/createuser', async (req, res) => {
 
 
 // CREATE - Add new user from live feed
-app.post('/createuserr', async (req, res) => {
+app.post('/api/createproduct', async (req, res) => {
     try {
-        const { title, description, price, vendor, category } = req.body;
-        const count = req.body.rating?.count;
+        const  row = req.body.rows;
+        console.log(req.body);
+
+        console.log([row.sku, row.name, row.description, row.price, row.quantity, row.mark_up, req.body.supplier.id]);
+        
+       // const count = req.body.rating?.count;
         const result = await pool.query(
-            'INSERT INTO product(name,description,price,vendor,category,quantity,created_on,updated_on)   VALUES ($1,$2,$3,$4,$5,$6,now(),now()) RETURNING *', [title, description, price, vendor, category,count]
+            "INSERT INTO product(sku,name,description,price,quantity,mark_up,supplier_code,created_on,updated_on) VALUES($1, $2, $3, $4,$5,$6,$7, NOW(), NOW()) RETURNING * "
+            , [row.sku, row.name, row.description, row.price, row.quantity, row.mark_up, req.body.supplier.id]
 
 
         );
@@ -234,9 +239,46 @@ app.post('/createuserr', async (req, res) => {
         console.log("Inside CREATE AT: " + timeStamp());
 
 
-        res.status(201).json({ success: true, data: result.rows[0] + " TESTSSSS" });
+        res.status(201).json({ success: true, data: result });
 
     } catch (error) {
+       
+
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.get('/api/getsyncedproducts', async (req, res) => {
+    try {
+     
+       // const count = req.body.rating?.count;
+        const result = await pool.query(
+            `SELECT p.*,
+       CASE
+         WHEN dup.count > 1 THEN true
+         ELSE false
+       END AS is_duplicate
+FROM product p
+
+LEFT JOIN (
+    SELECT sku, COUNT(*) AS count
+    FROM product
+
+    GROUP BY sku
+) dup ON p.sku = dup.sku
+where is_synced = true; `            
+
+
+        );
+
+
+        console.log("Inside getsyncedproducts AT: " + timeStamp());
+
+       
+        res.status(200).json({ success: true, data: result.rows });
+
+    } catch (error) {
+       
+
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -321,7 +363,21 @@ app.get('/getproduct/bysupplier/:x/:y', async (req, res) => {
     try {
         var { x,y} = req.params;
 
-        const result = await pool.query("SELECT * FROM product where supplier_code = $1 ", [x]);
+
+        const result = await pool.query(`SELECT p.*,
+       CASE
+         WHEN dup.count > 1 THEN true
+         ELSE false
+       END AS is_duplicate
+FROM product p
+
+LEFT JOIN (
+    SELECT sku, COUNT(*) AS count
+    FROM product
+
+    GROUP BY sku
+) dup ON p.sku = dup.sku
+where supplier_code = $1 limit 100 offset $2`, [x, y]);
 
         console.log("Inside GET 'getproduct' by supplier_code AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
@@ -593,17 +649,163 @@ app.delete('/api/syntech/bulk-delete', async (req, res) => {
         var t  = [];
 
         var p = req.body.rows;
-        console.log("my rows: ", p.length);
+        console.log("my rows: ", p);
         console.log("my sup: ", sup);
 
 
         for (const row of rows) {
            // console.log(row);
             const result = await pool.query(
-                `DELETE FROM product WHERE sku = $1 returning *; `,
+                `DELETE FROM product WHERE sku = $1 and supplier_code = $2 returning *; `,
                 [
 
-                    row.sku           //3
+                    row  ,sup        //3
+
+
+                    //11 description
+                ]
+            );
+            t.push(row.sku);
+            status = result.command; // "INSERT" or "UPDATE"
+        }
+      //  console.log(t);
+        console.log("Last operation:", status);
+        console.log(rows.length);
+        res.json({ success: true, status });
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+app.post('/api/sync', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+
+        let status = null;
+        var t  = [];
+
+
+
+        for (const row of rows) {
+           // console.log(row);
+            const result = await pool.query(
+                `UPDATE product SET is_synced = true WHERE sku = $1 returning *; `,
+                [
+
+                    row          //3
+
+
+                    //11 description
+                ]
+            );
+            t.push(row.sku);
+            status = result.command; // "INSERT" or "UPDATE"
+        }
+      //  console.log(t);
+        console.log("Last operation:", status);
+        console.log(rows.length);
+        res.json({ success: true, status });
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+
+
+// READ - Get products by supplier
+app.get('/api/getproducts/bysuppliercode/:id', async (req, res) => {
+    try {
+        const id = req.params;
+        console.log(id);
+        const result = await pool.query(`SELECT p.*,
+       CASE
+         WHEN dup.count > 1 THEN true
+         ELSE false
+       END AS is_duplicate
+FROM product p
+
+LEFT JOIN (
+    SELECT sku, COUNT(*) AS count
+    FROM product
+
+    GROUP BY sku
+) dup ON p.sku = dup.sku
+WHERE supplier_code = $1 `, [id]);
+        console.log("Supplier ", id);
+        console.log("products ", result.rows.length);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+
+app.post('/api/getdetailed_supplier_info', async (req, res) => {
+    try {
+       
+
+        let status = null;
+        
+
+
+
+        
+           // console.log(row);
+            const result = await pool.query(
+                `SELECT p.*,
+       CASE
+         WHEN dup.count > 1 THEN true
+         ELSE false
+       END AS is_duplicate
+FROM product p
+
+LEFT JOIN (
+    SELECT sku, COUNT(*) AS count
+    FROM product
+
+    GROUP BY sku
+) dup ON p.sku = dup.sku
+
+`,[]
+            );
+            
+            status = result.command; // "INSERT" or "UPDATE"
+        
+      //  console.log(t);
+        console.log("Last operation:", status);
+    
+        res.json({ success: true, data:result.rows});
+    } catch (error) {
+        console.error("Bulk insert error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.post('/api/unsync', async (req, res) => {
+    try {
+        const rows = req.body.rows;
+
+        let status = null;
+        var t  = [];
+
+
+
+        for (const row of rows) {
+           // console.log(row);
+            const result = await pool.query(
+                `UPDATE product SET is_synced = false WHERE sku = $1 returning *; `,
+                [
+
+                    row          //3
 
 
                     //11 description
