@@ -91,9 +91,10 @@ const ProductTable = ({ initialProducts }) => {
     }
 
 
-  const sync = async () => {
+  const sync = async (x) => {
 
-      var t = await MyClass.syncProducts(selectedSkus);
+      var t = await MyClass.syncProducts(x);
+      alert(JSON.stringify(x.supplier)+" queued")
 
 
       console.log(t);
@@ -365,22 +366,26 @@ const ProductTable = ({ initialProducts }) => {
                 )
                 }
             </>)}
-            <div class="table-container">
             
-                <button onClick={() => { handleSaveAll_() }}>PREVIEW</button>
-                <button onClick={() => { handleSaveAll_(true) }}>SAVE </button>
-                <button onClick={() => { sync() }}>SYNC SELECTED</button>
-                <button onClick={deleteProduct}>Delete</button><input
+            <div >
+            
+                <button style={{ margin: "50px 20px 20px 0px" }} onClick={() => { handleSaveAll_() }}>PREVIEW</button>
+                <button style={{ margin: "0px 20px 0px 0px" }} onClick={() => { handleSaveAll_(true) }}>SAVE </button>
+                <button style={{ margin: "0px 20px 0px 0px" }} onClick={() => { sync() }}>SYNC SELECTED</button>
+                <button style={{ margin: "0px 20px 0px 0px" }} onClick={deleteProduct}>Delete</button>
+                <input
                     type="text"
                     value={bulkDelivery}
                     onChange={(e) => setBulkDelivery(e.target.value)}
                     placeholder="Delivery Cost..."
+                    style={{ margin: "0px 20px 0px 0px" }}
                 /><input
                     type="text"
                     value={bulkMarkup}
                     onChange={(e) => setBulkMarkup(e.target.value)}
                     placeholder="Markup % ..."
-                />
+                    />
+               
       <table className="table table-striped">
       <thead>
         <tr>
@@ -394,13 +399,13 @@ const ProductTable = ({ initialProducts }) => {
 <th>NAME</th>
 <th>SKU</th>
 <th>PRICE</th>
-<th>PRICE + MARK_UP</th>
+<th>PRICE_+_MARK_UP</th>
 <th>DELIVERY_COST</th>
 <th>MARK_UP</th>
 <th>QUANTITY</th>
 <th>LAST_UPDATE</th>
-<th>Is Synced?</th>
-<th>Is Duplicate?</th>
+<th>Is_Synced?</th>
+<th>Has_Duplicate?</th>
 <th></th>
                           
 
@@ -465,7 +470,7 @@ const ProductTable = ({ initialProducts }) => {
 
                           <td ><p className="alert-danger alert" style={{ textAlign: "center" }} >YES</p></td> : <td ><p className="alert-success alert" style={{ textAlign: "center" }} >NO</p></td>
                       }
-                     
+                      <td><button onClick={()=>sync(row) }>Queue</button></td>
           </tr>
                         ))}
 
@@ -481,7 +486,10 @@ const ProductTable = ({ initialProducts }) => {
     </table>
       </div>
       </div>
+      
+    
+      
   );
-};
+}
 
 export default ProductTable;

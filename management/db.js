@@ -223,10 +223,10 @@ app.post('/createuser', async (req, res) => {
 app.post('/api/createproduct', async (req, res) => {
     try {
         const  row = req.body.rows;
-        console.log(req.body);
-
-        console.log([row.sku, row.name, row.description, row.price, row.quantity, row.mark_up, req.body.supplier.id]);
         
+        console.log(row, " row");
+        console.log([row.sku, row.name, row.description, row.price, row.quantity, row.mark_up, req.body.supplier.id]);
+        console.log(req.body.supplier.id);
        // const count = req.body.rating?.count;
         const result = await pool.query(
             "INSERT INTO product(sku,name,description,price,quantity,mark_up,supplier_code,created_on,updated_on) VALUES($1, $2, $3, $4,$5,$6,$7, NOW(), NOW()) RETURNING * "
@@ -239,7 +239,7 @@ app.post('/api/createproduct', async (req, res) => {
         console.log("Inside CREATE AT: " + timeStamp());
 
 
-        res.status(201).json({ success: true, data: result });
+        res.status(201).json({ success: true, data: result[0] });
 
     } catch (error) {
        
@@ -247,6 +247,10 @@ app.post('/api/createproduct', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+
+
+
 app.get('/api/getsyncedproducts', async (req, res) => {
     try {
      
@@ -272,6 +276,35 @@ where is_synced = true; `
 
 
         console.log("Inside getsyncedproducts AT: " + timeStamp());
+
+       
+        res.status(200).json({ success: true, data: result.rows });
+
+    } catch (error) {
+       
+
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.get('/api/getothersuppliers/:sku', async (req, res) => {
+
+    const { sku } = req.params;
+    console.log(sku);
+    try {
+     
+       // const count = req.body.rating?.count;
+        const result = await pool.query(
+            `SELECT product.name,vendor.name as "supplier", price, quantity
+	FROM public.product
+	join vendor on product.supplier_code = vendor.id
+
+	where sku = $1` ,[sku]
+
+
+        );
+
+
+        console.log("Inside getothersuppliers AT: " + timeStamp());
 
        
         res.status(200).json({ success: true, data: result.rows });
@@ -318,6 +351,18 @@ app.get('/allproducts/', async (req, res) => {
     try {
         
         const result = await pool.query(`SELECT * FROM product`);
+
+        console.log("Inside GET 'product' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// READ - Get 1 products
+app.get('/product/', async (req, res) => {
+    try {
+        
+        const result = await pool.query(`SELECT * FROM product LIMIT 1`);
 
         console.log("Inside GET 'product' AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
@@ -423,13 +468,14 @@ app.get('/api/getproducts/bysuppliercode/:id', async (req, res) => {
 // READ - Get BY SKU
 app.get('/api/sku/:sku', async (req, res) => {
     try {
-        const { sku } = req.params;
-        const result = await pool.query('SELECT * FROM product WHERE sku = $1', [sku]);
+        const sku = req.params;
+        console.log(sku.sku);
+        const result = await pool.query('SELECT * FROM product WHERE sku = $1', [sku.sku]);
         console.log("Inside GET by SKU");
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        res.json({ success: true, data: result.rows[0] });
+        res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -573,7 +619,7 @@ app.post('/api/bulk-update', async (req, res) => {
         const supp_code_id = supply.id;
 
         console.log(`Starting bulk update for supplier: ${JSON.stringify(supp_code_id)}`);
-
+        console.log(req.body.supply.name);
          //We use a map to create an array of promises
         const updatePromises = rows.map(row => {
             return pool.query(
@@ -587,7 +633,7 @@ app.post('/api/bulk-update', async (req, res) => {
         -- Cast the unknown parameters to numeric to resolve the operator ambiguity
         price_after_mark_up = ($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)),
         updated_on = NOW()
-    WHERE sku = $3
+    WHERE sku = $3 AND supplier_code = $8
     RETURNING *
 )
 INSERT INTO product (
@@ -681,31 +727,36 @@ app.delete('/api/syntech/bulk-delete', async (req, res) => {
 
 app.post('/api/sync', async (req, res) => {
     try {
-        const rows = req.body.rows;
+        const rows = req.body.products;
+     
 
         let status = null;
         var t  = [];
+        console.log(req.body);
+       
 
-
-
-        for (const row of rows) {
-           // console.log(row);
+       
+            // console.log(row);
             const result = await pool.query(
-                `UPDATE product SET is_synced = true WHERE sku = $1 returning *; `,
+                `UPDATE product SET is_synced = true WHERE sku = $1 AND supplier_code =$2 returning *; `,
                 [
 
-                    row          //3
+                    rows.sku,
+                    rows.supplier_code
 
 
                     //11 description
                 ]
             );
-            t.push(row.sku);
+        
             status = result.command; // "INSERT" or "UPDATE"
-        }
+        
+        
       //  console.log(t);
         console.log("Last operation:", status);
-        console.log(rows.length);
+        
+        console.log(req.body.supplier);
+        
         res.json({ success: true, status });
     } catch (error) {
         console.error("Bulk insert error:", error);
@@ -792,20 +843,20 @@ LEFT JOIN (
 });
 app.post('/api/unsync', async (req, res) => {
     try {
-        const rows = req.body.rows;
+        const rows = req.body;
 
         let status = null;
         var t  = [];
 
+        console.log(rows);
 
-
-        for (const row of rows) {
+        for (const row of rows.products) {
            // console.log(row);
             const result = await pool.query(
-                `UPDATE product SET is_synced = false WHERE sku = $1 returning *; `,
+                `UPDATE product SET is_synced = false WHERE sku = $1 AND supplier_code =$2 returning *; `,
                 [
 
-                    row          //3
+                    row.sku,row.supplier_code          //3
 
 
                     //11 description

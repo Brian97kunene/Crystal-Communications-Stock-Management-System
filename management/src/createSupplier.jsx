@@ -103,7 +103,7 @@ export default function CreateSupplier({ apiEndpoint = '/createvendor', onCreate
         />
         {errors.name && <div role="alert" style={{ color: 'red' }}>{errors.name}</div>}
       </div>
-
+                <br />
       <div>
         <label htmlFor="email">Email *</label>
                     <input

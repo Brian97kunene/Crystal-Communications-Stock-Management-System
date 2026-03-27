@@ -280,7 +280,6 @@ const Suppliers = () => {
 
             </>} 
 
-            <ol>
                 {supps.length >= 1 && <>
                     <button onClick={() => deleteProducts(l)}>DELETE MARKED SUPPLIERS 
                 </button><br />
@@ -288,6 +287,7 @@ const Suppliers = () => {
             }
                 <button style={{ display:"sticky" , position:"static" }} onClick={() => setrefresh(prev => !prev)}></button>
 
+            <ol>
                     <div class="accordion" id="accordionUpdates">
                         { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
                         { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
@@ -338,7 +338,7 @@ const Suppliers = () => {
                                 <h4>{supplier.contact_person}</h4>
                                 <button onClick={() => setshowTbl(!showTbl)}>View Products</button>
 
-                                            {supplier.data_format === "XML" || supplier.data_format === "CSV" &&
+                                            {(supplier.data_format === "XML" || supplier.data_format === "CSV" )&&
                                 <button onClick={() => setupload(!upload)}>Update Products</button>
 
                                 }

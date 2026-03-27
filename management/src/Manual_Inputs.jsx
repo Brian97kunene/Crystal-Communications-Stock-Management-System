@@ -19,7 +19,8 @@ const ManualList = ({ supplier}) => {
         const getEm = async () => {
 
 
-            setproducts(await MyClass.getAllDbProducts());
+            setproducts(await MyClass.getProduct());
+
         }
         getEm();
 
@@ -46,6 +47,13 @@ const ManualList = ({ supplier}) => {
 
 
             console.log(response);
+
+            if (response.status) {
+
+                alert("Product Created Successfully.")
+
+            }
+
         }
         catch (err) { console.log(err); }
 

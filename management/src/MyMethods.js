@@ -51,6 +51,23 @@ class MyClass {
 
 
     }
+    static async getProduct() {
+
+
+
+        try {
+            
+            var response = await fetch("http://localhost:5552/product/");
+
+            const data = await response.json();
+            console.log(data);
+            return data.data ;
+        }
+        catch(err)
+        { console.log(err); }
+
+
+    }
     static async getProducts() {
         const port = 5552;         
 
@@ -114,8 +131,56 @@ class MyClass {
         
 
         try {
+
+            console.log(products);
+            console.log(typeof products);
+
+            let prods = [];
+            
+        console.log(prods);
+                const response =  await fetch(`http://localhost:${port}/api/sync`, {
+                    method: "POST", // or "PATCH" if partial updates
+                    headers: {
+                        "Content-Type": "application/json"
+
+                    },
+                    body: JSON.stringify({
+                         products
+                      
+                      
+                    }),
+                });
+
+                //var prod = JSON.stringify( x ) ;
+
+                
+
+                return response;
+
+            }
+            catch (err) {
+
+               
+
+                return err;
+
+        };
+
+
+
+    }
+    static async syncProduct(products,supp) {
+        const port = 5552;
+        
+
+        try {
+
+            console.log(products);
+            console.log(typeof products);
+
             let prods = [];
             products.forEach((i) => {
+            
                 prods.push(i);
       
                // console.log("these are ", i);
@@ -132,6 +197,7 @@ class MyClass {
                     },
                     body: JSON.stringify({
                         rows: prods,
+                        supplier: supp
                       
                     }),
                 });
@@ -178,7 +244,7 @@ class MyClass {
 
                     },
                     body: JSON.stringify({
-                        rows: prods,
+                        products
                       
                     }),
                 });
@@ -279,6 +345,41 @@ class MyClass {
 
 
             return response;
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+
+
+
+    }
+
+    static async getOtherSupplier(sku) {
+        const port = 5552;
+
+
+        console.log("looking for ",sku);
+
+        try {
+           
+
+            
+            const response = await fetch(`http://localhost:${port}/api/getothersuppliers/${sku.sku}`);
+
+            //var prod = JSON.stringify( x ) ;
+
+
+            var data = await response.json();
+
+            console.log(data.data);
+
+            return data.data;
+
 
         }
         catch (err) {
