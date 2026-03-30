@@ -294,7 +294,7 @@ app.get('/api/getothersuppliers/:sku', async (req, res) => {
      
        // const count = req.body.rating?.count;
         const result = await pool.query(
-            `SELECT product.name,vendor.name as "supplier", price, quantity
+            `SELECT vendor.id as "supplier_id" ,product.name,vendor.name as "supplier", price, quantity
 	FROM public.product
 	join vendor on product.supplier_code = vendor.id
 
@@ -325,6 +325,19 @@ app.get('/getproductcount', async (req, res) => {
 
         console.log("Inside GET 'product' count AT: " + timeStamp());
         res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// READ - Get all products count
+app.get('/api/getothersuppliers', async (req, res) => {
+
+
+    try {
+        const result = await pool.query('SELECT * from synced_skus_and_suppliers ');
+
+        
+        res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

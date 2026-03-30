@@ -174,44 +174,92 @@ const ManualList = () => {
 
         //return response.data;
         const [supp,pro] = await Promise.all([
-            MyClass.getOtherSupplier(p[0]),
+            MyClass.getOtherSupplier(p),
             MyClass.getAllDbProducts(),
 
         ])
-        const a = new Map([]);
+        const a = new Map([]); 
+        const aa = []; 
+     
 
-
-
-
-
-
-        console.log(pro);
-        console.log(supp);
-        console.log("fast fast");
 
         
+
+
+
+        console.log(supp);
+        console.log(pro);
+        console.log("fast fast");
+
+        console.log(p);
 
 
         console.log(typeof supp);
 
+        for (const u of p) {
 
-        supp.forEach(i => {
+        supp.forEach((i ,indx)=> {
             console.log(i);
-            a.set(i.sku, {
-                supplier: i.supplier,
-                price:i.price
+            console.log(i.supplier_id + " " +u.sku);
+            
+
+
+            if (i.sku === u.sku) {
+                console.log("match");
+                console.log(i);
+                console.log(u);
+
+
+      
+
+                aa.push({
+
+                    sku: u.sku,
+                    details:{
+                    supplier: i.supplier,
+                        price: i.price,
+                    Qty:i.quantity
+                }
+                
             })
-            t += i.supplier +" "+i.quantity+" - R"+i.price+ "\n";
+                
 
         }
 
+            }
         )
+        }
 
 
-        settip(t)
+        settip(aa)
         
-        console.log(a);
+        console.log(aa);
+
+        
+        console.log(tip)
     }
+
+
+
+    const setTitle = (row) => {
+       var res = ""
+
+        for (const u of tip) {
+
+            if (u.sku === row.sku) {
+
+
+                console.log("success");
+
+
+                res += u.details.supplier + " " + u.details.price + " " + u.details.Qty+"\n";
+            }
+        }
+        return res
+    }
+
+
+
     const Handle = (col) => {
         
 
@@ -292,17 +340,18 @@ const ManualList = () => {
                                             </td>
                                             </>
                                     ))}
-                                    <td>{ row.supplier_code}</td>
+                                    <td>{ row.vendor}</td>
                                     { row.is_duplicate.toString() === "true" ?
 
-                                        <td title={row.name}  ><p className="alert-danger alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >YES</p></td> : <td ><p className="alert-success alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >NO</p></td>
+                                        <td title={row.name}  > <p className="alert-danger alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >YES</p> </td> : <td ><p className="alert-success alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >NO</p></td>
                                     }
                                     {row.is_duplicate.toString() === "true" ?
 
-                                        < td key={row.id} > <button style={{ width: "100px" }} title={tip} onClick={checkDups}>ACTIONS</button></td > : <td><span></span></td>
+                                        < td key={row.id} > <button style={{ width: "100px" }} title={setTitle(row)} onClick={checkDups}>ACTIONS</button></td > : <td><span></span></td>
 
                                    
                                     }
+                                    {row.is_duplicate.toString() === "true" ? <></> :"</>"}
                                     </tr>
                                 ))}
                             

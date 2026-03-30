@@ -369,7 +369,7 @@ class MyClass {
            
 
             
-            const response = await fetch(`http://localhost:${port}/api/getothersuppliers/${sku.sku}`);
+            const response = await fetch(`http://localhost:${port}/api/getothersuppliers`);
 
             //var prod = JSON.stringify( x ) ;
 
