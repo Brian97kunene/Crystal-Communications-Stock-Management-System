@@ -465,8 +465,8 @@ const ProductTable = ({ initialProducts }) => {
                       {row.updated_on && <td >{MyClass.formatDate(row.updated_on)} </td> }
              
                 
-                      <td>{typeof row.is_synced === "boolean" ? row.is_synced.toString().toUpperCase() : row.is_synced}</td>
-                      {row.is_duplicate.toString() === "true" ?
+                      <td>{typeof row.is_synced === "boolean" ? row.is_synced?.toString().toUpperCase() : row.is_synced}</td>
+                      {row.is_duplicate?.toString() === "true" ?
 
                           <td ><p className="alert-danger alert" style={{ textAlign: "center" }} >YES</p></td> : <td ><p className="alert-success alert" style={{ textAlign: "center" }} >NO</p></td>
                       }
