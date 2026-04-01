@@ -909,8 +909,7 @@ app.post('/api/syntech/bulk-insert', async (req, res) => {
          )
          VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 15.00, $11, $10,$12
-         ) on conflict (sku)
-         do nothing RETURNING*;`,
+         )RETURNING*;`,
                     [
                         row.name,         //1
                         row.description, //2  // detailed_description

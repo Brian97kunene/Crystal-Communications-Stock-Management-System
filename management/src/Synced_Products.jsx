@@ -149,30 +149,7 @@ const ManualList = () => {
 
             }
         })
-        //console.log("Donezo", products);
-
-
-        //var response = await MyClass.getOtherSupplier(row);
-
-        //console.log(response);
-
-
-
-
-        //var t = "";
-        //console.log(response.data)
-        //response.data.forEach(i => {
-
-
-        //    t += i.supplier +" "+i.quantity+" - R"+i.price+ "\n";
-
-        //}
-
-        //)
-
-
-
-        //return response.data;
+       
         const [supp,pro] = await Promise.all([
             MyClass.getOtherSupplier(p),
             MyClass.getAllDbProducts(),
@@ -183,31 +160,15 @@ const ManualList = () => {
      
 
 
-        
-
-
-
-        console.log(supp);
-        console.log(pro);
-        console.log("fast fast");
-
-        console.log(p);
-
-
-        console.log(typeof supp);
-
         for (const u of p) {
 
         supp.forEach((i ,indx)=> {
-            console.log(i);
-            console.log(i.supplier_id + " " +u.sku);
+   
             
 
 
             if (i.sku === u.sku) {
-                console.log("match");
-                console.log(i);
-                console.log(u);
+        
 
 
       
@@ -233,10 +194,7 @@ const ManualList = () => {
 
         settip(aa)
         
-        console.log(aa);
-
-        
-        console.log(tip)
+ 
     }
 
 
@@ -252,7 +210,7 @@ const ManualList = () => {
                 console.log("success");
 
 
-                res += u.details.supplier + " " + u.details.price + " " + u.details.Qty+"\n";
+                res += u.details.supplier + " | R" + u.details.price + " | Qty: " + u.details.Qty+"\n";
             }
         }
         return res
@@ -346,12 +304,15 @@ const ManualList = () => {
                                         <td title={row.name}  > <p className="alert-danger alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >YES</p> </td> : <td ><p className="alert-success alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >NO</p></td>
                                     }
                                     {row.is_duplicate.toString() === "true" ?
+                                        <>
+                                            < td key={row.id} > <button style={{ width: "60px" }} title={setTitle(row)} onClick={checkDups}>Info</button></td >
+                                           
+                                        </>
 
-                                        < td key={row.id} > <button style={{ width: "100px" }} title={setTitle(row)} onClick={checkDups}>ACTIONS</button></td > : <td><span></span></td>
+                                        : <td><span></span></td>}
+                                    {row.is_duplicate.toString()
+                                        !== "true" ? <></> : ""}
 
-                                   
-                                    }
-                                    {row.is_duplicate.toString() === "true" ? <></> :"</>"}
                                     </tr>
                                 ))}
                             

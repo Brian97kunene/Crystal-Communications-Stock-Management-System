@@ -6,8 +6,7 @@ import Upload from './ReadAFile.jsx'
 import EditSupp from './EditSupplier.jsx'
 import Manual_inputs from './Manual_inputs.jsx'
 import Livefeed_Updates from './Livefeed_Updates.jsx'
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const Suppliers = () => {
 

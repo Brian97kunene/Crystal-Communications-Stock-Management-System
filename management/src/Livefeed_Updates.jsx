@@ -203,7 +203,10 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
         try {
 
-            const response = await MyClass.deleteProducts(ExtractArrayOfObjectsLists(x), supplier.code);
+
+
+
+            const response = await MyClass.deleteProducts(ExtractArrayOfObjectsLists(x), supplier.id);
 
             //var prod = JSON.stringify( x ) ;
 
@@ -218,7 +221,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
         finally {
             setLoading(false); // hide spinner
 
-            console.log("&&&");
+        
 
 
         }
