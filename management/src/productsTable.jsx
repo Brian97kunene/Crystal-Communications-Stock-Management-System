@@ -235,11 +235,11 @@ const ProductsTable = ({ val, close, supplier }) => {
 
     const Paginate = (action) => {
         if (action === "next") {
-            setProdOffset(i => i + 100);
+            setProdOffset(i => i + 20);
         } else {
 
             if (ProdOffset > 0) {
-                setProdOffset(i => i - 100);
+                setProdOffset(i => i - 20);
             }
         }
     };

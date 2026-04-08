@@ -142,6 +142,8 @@ const Suppliers = () => {
         }
 
         // Capitalize the first letter of the resulting string
+      
+
         return result.charAt(0).toUpperCase() + result.slice(1);
     }
 
@@ -301,7 +303,7 @@ const Suppliers = () => {
                     
                   
 
-                            <h2 class="accordion-header" id={"heading" + numberToWords(supplier.id+1)}>
+                            <h2 class="accordion-header" id={"heading" + numberToWords(supplier.id)}>
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target={"#collapse" + numberToWords(supplier.id)} aria-expanded="true" aria-controls="collapseOne">
 
                             <div class="" role="alert">

@@ -237,6 +237,7 @@ class MyClass {
             
             );
         console.log(prods);
+        console.log(products.values());
                 const response =  await fetch(`http://localhost:${port}/api/unsync`, {
                     method: "POST", // or "PATCH" if partial updates
                     headers: {
@@ -244,7 +245,7 @@ class MyClass {
 
                     },
                     body: JSON.stringify({
-                        products
+                        rows:prods
                       
                     }),
                 });
@@ -328,7 +329,48 @@ class MyClass {
             }
 
             );
-            const response = await fetch(`http://localhost:${port}/api/syntech/bulk-update`, {
+            const response = await fetch(`http://localhost:${port}/api/bulk-update`, {
+                method: "POST", // or "PATCH" if partial updates
+                headers: {
+                    "Content-Type": "application/json"
+
+                },
+                body: JSON.stringify({
+                    rows: prods,
+                    supplier: supp_code
+                }),
+            });
+
+            //var prod = JSON.stringify( x ) ;
+
+
+
+            return response;
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+
+
+
+    }
+    static async updateProductsMarkup(products, supp_code) {
+        const port = 5552;
+
+        try {
+            let prods = [];
+            products.forEach(i => {
+                prods.push(i);
+                console.log("these are ", i);
+            }
+
+            );
+            const response = await fetch(`http://localhost:${port}/api/bulk-update-mark-up`, {
                 method: "POST", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -363,12 +405,12 @@ class MyClass {
         const port = 5552;
 
 
-        console.log("looking for ",sku);
+        console.log("looking for ", sku);
 
         try {
-           
 
-            
+
+
             const response = await fetch(`http://localhost:${port}/api/getothersuppliers`);
 
             //var prod = JSON.stringify( x ) ;
@@ -389,6 +431,80 @@ class MyClass {
             return err;
 
         };
+    }
+    static async getOtherSupplier(sku) {
+        const port = 5552;
+
+
+        console.log("looking for ", sku);
+
+        try {
+
+
+
+            const response = await fetch(`http://localhost:${port}/api/getothersuppliers`);
+
+            //var prod = JSON.stringify( x ) ;
+
+
+            var data = await response.json();
+
+            console.log(data.data);
+
+            return data.data;
+
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+    }
+    static async getproduct(sku,filterby) {
+        const port = 5552;
+
+
+        console.log("looking for ",sku);
+
+        try {
+
+            if (filterby.toLowerCase() === "sku") {
+
+
+                const response = await fetch(`http://localhost:${port}/getproduct/bysku/${sku}`);
+
+                var data = await response.json();   
+
+
+                return data.data;
+
+
+            }
+            else {
+                const response = await fetch(`http://localhost:${port}/getproduct/byname/${sku}`);
+
+
+                var data = await response.json();   
+
+            return data.data;
+            }
+
+            //var prod = JSON.stringify( x ) ;
+
+
+
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
 
 
 
@@ -397,6 +513,44 @@ class MyClass {
 
 
 
+    static async fake() {
+        const port = 5552;
+
+
+        
+
+        try {
+
+
+
+            const response = await fetch(`http://localhost:${port}/fake`, {
+                method: "delete", // or "PATCH" if partial updates
+                headers: {
+                    "Content-Type": "application/json"
+
+                }
+        })
+            //var prod = JSON.stringify( x ) ;
+
+
+            var data = await response.json();
+
+            console.log(data.data);
+
+            return data.data;
+
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+    }
+
+    
 
 
 }

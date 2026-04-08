@@ -16,6 +16,7 @@ const ManualList = () => {
     const [duplicatesProduct, setduplicatesProduct] = useState([])
     const [selectedSkus, setSelectedSkus] = useState(new Set());
     const [tip, settip] = useState("");
+    const [tiip, settiip] = useState([]);
 
 
 
@@ -53,11 +54,15 @@ const ManualList = () => {
 
         const getSups = async () => {
 
-
             console.log(tip);
-           // var t = await MyClass.unsyncProducts(duplicatesProduct);
 
 
+          
+           
+
+            
+
+            
             
         }
         getSups();
@@ -144,7 +149,7 @@ const ManualList = () => {
         products.forEach((i) => {
             if (i.is_duplicate) {
 
-                console.log(i)
+                
                 p.push(i);
 
             }
@@ -199,12 +204,11 @@ const ManualList = () => {
         for (const u of p) {
 
         supp.forEach((i ,indx)=> {
-            console.log(i);
-            console.log(i.supplier_id + " " +u.sku);
+
             
 
 
-            if (i.sku === u.sku) {
+            if (i.sku === u.sku && i.supplier !== u.vendor) {
                 console.log("match");
                 console.log(i);
                 console.log(u);
@@ -229,11 +233,19 @@ const ManualList = () => {
             }
         )
         }
+        //const uniqueArr = aa.filter(
+        //    (obj, index, self) =>
+        //        index === self.findIndex(o => o.id === obj.id)
+        //);
 
 
-        settip(aa)
-        
+        const unique = [...new Map(aa.map(obj => [obj.sku + obj.details.supplier, obj])).values()];
+
+        console.log(unique);
+        settip(unique)
+
         console.log(aa);
+       /* console.log(uniqueArr);*/
 
         
         console.log(tip)
@@ -242,7 +254,7 @@ const ManualList = () => {
 
 
     const setTitle = (row) => {
-       var res = ""
+       var res = []
 
         for (const u of tip) {
 
@@ -252,10 +264,31 @@ const ManualList = () => {
                 console.log("success");
 
 
-                res += u.details.supplier + " " + u.details.price + " " + u.details.Qty+"\n";
+                res.push({sku:u.sku,dups: { supplier: u.details.supplier, price: u.details.price, Qty: u.details.Qty } 
+});
             }
         }
-        return res
+
+        console.log(res);
+        var t = "";
+
+
+
+      
+
+        // Output: [ { id: 1, name: "Alice" }, { id: 2, name: "Bob" } ]
+
+
+
+
+        res.forEach(i =>
+
+            t += i.dups.supplier + " -  R" + i.dups.price + " -  Qty: " + i.dups.Qty+"\n"
+        
+        )
+
+
+        return t;
     }
 
 
@@ -290,14 +323,14 @@ const ManualList = () => {
 
             <button onClick={() => setrefresh(!refresh)}></button>
             {products.length === 0 && 
-                <div style={{ width: "95%", margin: "0px 0px 50px 20px", display: "flex", justifyContent: "center" }}>
+                <div style={{ width: "95%", margin: "0px 0px 0px 0px", display: "flex", justifyContent: "left" }}>
                     <h1 className="alert-warning alert" >No Products Queued</h1>
                 </div>
 
                 
             }
             {products.length > 0 && (
-                <div style={{width:"95%", margin:"0px 0px 100px 50px"}}>
+                <div style={{width:"99%", margin:"0px 0px 100px 0px"}}>
                 <div style={{width:"95%", margin:"0px 0px 50px 20px",display:"flex",justifyContent:"center"}}>
                         <h1>ALL  PRODUCTS QUED FOR SHOPIFY SYNC: </h1>
                     </div>
@@ -310,7 +343,7 @@ const ManualList = () => {
                                     <input
                                         type="checkbox"
                                         onChange={toggleAll}
-                                        checked={product.length > 0 && selectedSkus.size === product.length}
+                                        checked={products.length > 0 && selectedSkus.size === products.length}
                                     />
                                 </th>
 
@@ -321,6 +354,7 @@ const ManualList = () => {
                                     ))}
                                     <th>Supplier</th>
                                     <th>Has_Duplicate?</th>
+                                    <th>Duplicate </th>
                             </tr>
                         </thead>
                           {/*checked={selectedSkus.has(row)}*/}
@@ -328,9 +362,12 @@ const ManualList = () => {
                             
                             {products.map((row, rowIndex) => (
                                 
-                                    <tr key={rowIndex}>
+                                 
+
+                                        <tr key={rowIndex}  >
                                      <td><input
-                                     type="checkbox"
+                                        type="checkbox"
+                                        checked={selectedSkus.has(row)} 
                           onChange={() => toggleSelect(row)}
                       /></td>
                                     {Object.keys(row).filter((col) => !columnsToExclude.includes(col)).map((col, colIndex) => (
@@ -351,17 +388,26 @@ const ManualList = () => {
 
                                    
                                     }
-                                    {row.is_duplicate.toString() === "true" ? <></> :"</>"}
-                                    </tr>
+                                   
+
+                                    {row.is_duplicate.toString() === "true" ? ""  : ""}
+
+                                    <td>
+                                        {tip && tip.map((i, indx) => <span  style={{ margin: "0px 0px 0px 0px", color: "red"/*, width: "auto"*/, borderBottom: "1px solid black " }} key={indx}>{(row.sku === i.sku && row.vendor !== i.details.supplier) && <>  {i.details.supplier} - R{i.details.price} - Qty: {i.details.Qty} <br /> </>} </span>)}
+                                    </td>
+                                    
+                    </tr>
+                                        
+
                                 ))}
                             
                         </tbody>
                     </table>
-                   
+                  
+                  
 
-
-                    {selectedSkus.length > 0 && <>
-                        <div style={{ width: "95%", margin: "0px 0px 50px 20px", display: "flex", justifyContent: "right" }}>
+                    {selectedSkus.size > 0 && <>
+                        <div style={{ width: "95%", margin: "0px 0px 50px 20px", display: "flex", justifyContent: "center" }}>
                             <button onClick={() => unsync()}>Remove Marked</button>
                         </div>
                     </>}

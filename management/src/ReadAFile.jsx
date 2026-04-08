@@ -41,6 +41,18 @@ function CsvDropEditor(supplier) {
         fetchDbColumns();
     }, []);
 
+    useEffect(() => {
+        const fetchrows =  () => {
+            try {
+                console.log("selectedRows: ");
+                console.log(selectedRows);
+            } catch (error) {
+                console.error("Error :", error);
+            }
+        };
+        fetchrows();
+    }, [selectedRows]);
+
     
 
 
@@ -60,7 +72,7 @@ function CsvDropEditor(supplier) {
                     header: true,
                     skipEmptyLines: true,
                     step: (row) => {
-                        console.log(row.data);
+                        //console.log(row.data);
 
                         addRow(row.data);
 
@@ -226,7 +238,15 @@ function CsvDropEditor(supplier) {
 
     useEffect(() => {
         if (rows.length > 0) {
-            compareColumns(Object.keys(rows[0]));
+
+            console.log("compare rowzzz");
+
+ 
+            const lowerCaseKeys = Object.keys(rows[0]).map(key => key.toLowerCase());
+
+            console.log(lowerCaseKeys)
+            // console.log( Object.keys(rows[0].join(',')));
+            compareColumns(lowerCaseKeys);
         }
     }, [rows]);
 
@@ -341,7 +361,7 @@ function CsvDropEditor(supplier) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     rows: mappedRows,
-                    supply: suppli
+                    supplier: suppli
                 }),
             });
 
@@ -383,8 +403,9 @@ function CsvDropEditor(supplier) {
         console.log("selected: ",selectedRows);
 
         const rowsToInsert = selectedRows.map((i) => { // FOR ROWS
-            const row = rows[i];
-            const mappedRow = {};
+
+            const row = i;
+            const mappedRow = {}; 
 
             Object.keys(row).forEach((fileCol) => { // FOR COLUMNS
                 const dbCol = manualMappings[fileCol];
@@ -440,16 +461,16 @@ function CsvDropEditor(supplier) {
     
     const BulkTick = () => {
 
-        var iput = document.querySelectorAll(".bulk_add_cb");
-        var te = document.getElementById("tick_all");
-        var val = te.checked;
-        iput.forEach(i => {
+        const cb = document.getElementById("tick_all");
+        const bulk_cb = document.querySelectorAll(".bulk_add_cb");
 
-
-            i.checked = val;
-        });
-        console.log(te.value);
-
+        if (cb.checked) {
+            bulk_cb.forEach(c => c.checked = true);
+            setSelectedRows(filteredRows)
+        }
+        else {
+            setSelectedRows([]);
+        }
     }
 
 
@@ -544,7 +565,7 @@ function CsvDropEditor(supplier) {
                         <div style={{ marginTop: "10px", width: "100%", background: "#ddd", borderRadius: "5px", }}>
                             <div style={{ width: `${progress}%`, height: "10px", background: "#4CAF50", borderRadius: "5px", transition: "width 0.3s ease" }}></div>
                         </div>
-                        <p>{progress}%</p>
+                        <div style={{ border: "4px solid #f3f3f3", borderTop: "4px solid #3498db", borderRadius: "50%", width: `${progress}%`, height: "30px", margin: "0 auto" }} >{progress}%</div>
                     </div>
                 )}
 
@@ -595,7 +616,7 @@ function CsvDropEditor(supplier) {
                                 <thead>
                                     <tr>
 
-                                            <th>ALL <input id="tick_all" type="checkbox" onChange={() => BulkTick()} /></th>
+                                            <th>ALL <input id="tick_all" type="checkbox" onChange={() => BulkTick(filteredRows)} /></th>
                                             {Object.keys(rows[0]).map((col, index) => (
                                             <th
                                                 key={index}
@@ -636,7 +657,7 @@ function CsvDropEditor(supplier) {
                                                 <input
                                                     type="checkbox"
                                                     class="bulk_add_cb"
-                                                    checked={selectedRows.includes(i)}
+                                                    checked={selectedRows.includes(row)}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
                                                             setSelectedRows((prev) => [...prev, i]);

@@ -8,20 +8,6 @@ const ProductTable = ({ initialProducts }) => {
 
 
 
-    useEffect(() => {
-        setProductMap(new Map(initialProducts.map(p => [p.sku, p])));
-        console.log("INITIALLY: ", initialProducts);
-
-        if (initialProducts.length > 0) {
-            setselectedSupp(initialProducts[0].supplier_code);
-            console.log(selectedSupp);
-             setsearchbyfield("Name");
-        }
-    }, [initialProducts]);
-
-
-
-
 
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +22,21 @@ const ProductTable = ({ initialProducts }) => {
     const [searchproducts, setsearchproducts] = useState([]);
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [refresh, setrefresh] = useState(false);
+
+
+    useEffect(() => {
+        setProductMap(new Map(initialProducts.map(p => [p.sku, p])));
+        console.log("INITIALLY: ", initialProducts);
+
+        if (initialProducts.length > 0) {
+            setselectedSupp(initialProducts[0].supplier_code);
+            console.log(selectedSupp);
+             setsearchbyfield("Name");
+        }
+    }, [initialProducts,refresh]);
+
+
 
 
 
@@ -113,19 +114,42 @@ const ProductTable = ({ initialProducts }) => {
             const product = newMap.get(sku);
             if (!product) return;
 
-            const markupVal = bulkMarkup !== "" ? Number(bulkMarkup) : (Number(product.mark_up) || 0);
-            const deliveryVal = bulkDelivery !== "" ? Number(bulkDelivery) : (Number(product.delivery_cost) || 0);
-            const vat = (Number(product.vat) || 0) / 100;
 
-            const totalCost = (Number(product.price) || 0) + deliveryVal;
-            const finalPrice = (totalCost * (1 + (markupVal / 100)) * (1 + vat)).toFixed(2);
+            if (bulkMarkup) {
+
+                const markupVal = bulkMarkup !== "" ? Number(bulkMarkup) : (Number(product.mark_up) || 0);
+
+
+
+
+                const deliveryVal = bulkDelivery !== "" ? Number(bulkDelivery) : (Number(product.delivery_cost) || 0);
+                const vat = (Number(product.vat) || 0) / 100;
+
+                const totalCost = (Number(product.price) || 0) + deliveryVal;
+                const finalPrice = (totalCost * (1 + (markupVal / 100)) * (1 + vat)).toFixed(2);
+
+                newMap.set(sku, {
+                    ...product,
+                    price_after_mark_up: finalPrice,
+                    delivery_cost: deliveryVal,
+                    mark_up: markupVal
+                });
+            } else {
+
+                const deliveryVal = bulkDelivery !== "" ? Number(bulkDelivery) : (Number(product.delivery_cost) || 0);
+                const vat = (Number(product.vat) || 0) / 100;
+
+                const totalCost = (Number(product.price) || 0) + deliveryVal;
+                const finalPrice = (totalCost * (1 + (product.mark_up / 100)) * (1 + vat)).toFixed(2);
+
 
             newMap.set(sku, {
                 ...product,
                 price_after_mark_up: finalPrice,
                 delivery_cost: deliveryVal,
-                mark_up: markupVal
+               
             });
+            }
         });
 
 
@@ -133,8 +157,12 @@ const ProductTable = ({ initialProducts }) => {
         setSelectedSkus(new Set()); // Optional: clear selection after saving
 
         if (x === true) {
-
-        MyClass.updateProducts(Array.from(newMap.values()), selectedSupp);
+            if (bulkMarkup) {
+                MyClass.updateProductsMarkup(Array.from(newMap.values()), selectedSupp);
+            }
+            if (bulkDelivery) {
+                MyClass.updateProducts(Array.from(newMap.values()), selectedSupp);
+            }
 
 
         }
@@ -144,7 +172,7 @@ const ProductTable = ({ initialProducts }) => {
 
 
    
-    const search_ = () => {
+    const search_ = async () => {
         try {
 
 
@@ -167,33 +195,27 @@ const ProductTable = ({ initialProducts }) => {
             const search = 'al';
             const matches = [];
 
-            initialProducts.filter(user => {
-              //  console.log(searchTerm + " " + user.sku.toLowerCase());
-                user.sku.toLowerCase().includes(searchTerm.toLowerCase())
-                // console.log(user.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+            if (searchTerm) {
 
 
-                if (searchbyfield == "SKU") {
-                    if (user.sku.toLowerCase().includes(searchTerm.toLowerCase())) {
-                        matches.push(user)
-                        console.log(user);
-                            console.log(user + " " + searchbyfield);
-                    }
-                }
 
-                    else {
-                        if (user.name.toLowerCase().includes(searchTerm.toLowerCase())) {
 
-                            matches.push(user)
-                            console.log(user + " " + searchbyfield);
-                        }
-                }
+                const [t,fak] = await Promise.all([
+
+                 MyClass.getproduct(searchTerm, searchbyfield),
+                 MyClass.fake()
             
-        }
-            );
 
 
-            setsearchproducts(matches)
+                ])
+
+
+                console.log(fak);
+                console.log(t);
+              
+            setsearchproducts(t)
+            }
+
             console.log(matches + " - "+ searchbyfield);
             // Result: [{Alice}]
 
@@ -311,6 +333,7 @@ const ProductTable = ({ initialProducts }) => {
                 </select>
 
                 <button  onClick={search_}>SEARCH</button>
+                <button  onClick={()=> setrefresh(!refresh)}>reload</button>
                {/* <button onClick={upsert}>UPSERT</button>*/}
                
 
@@ -352,12 +375,18 @@ const ProductTable = ({ initialProducts }) => {
                         <tbody>
                             {searchproducts.map((row, rowIndex) => (
                                 <tr key={rowIndex}>
+                                {
+                                    /*row.supplier_code ===*/ initialProducts[0].supplier_code &&( <>
+
                                     {Object.keys(row).filter((col) => !columnsToExclude.includes(col)).map((col, colIndex) => (
                                         <td key={colIndex}>
                                             {row[col]}
                                         </td>
                                     ))}
+                                    </>)
+                                }
                                 </tr>
+                                
                             ))}
                         </tbody>
                     </table>
@@ -418,7 +447,7 @@ const ProductTable = ({ initialProducts }) => {
         </tr>
       </thead>
           <tbody>
-              {productList.map((row) => (
+              {productList.map((row,indx) => (<>
                   <tr key={row.sku}>
                       <td><input
                           type="checkbox"
@@ -467,20 +496,21 @@ const ProductTable = ({ initialProducts }) => {
                 
                       <td>{typeof row.is_synced === "boolean" ? row.is_synced?.toString().toUpperCase() : row.is_synced}</td>
                       {row.is_duplicate?.toString() === "true" ?
-
-                          <td ><p className="alert-danger alert" style={{ textAlign: "center" }} >YES</p></td> : <td ><p className="alert-success alert" style={{ textAlign: "center" }} >NO</p></td>
+                      <>
+                          <td ><p className="alert-danger alert" style={{ textAlign: "center" }} >YES</p>
+                                      
+                              </td>  </> :  <td >   
+                                          
+                          <p className="alert-success alert" style={{ textAlign: "center" }} >NO</p>
+                              </td>
+                                  
                       }
-                      <td><button onClick={()=>sync(row) }>Queue</button></td>
-          </tr>
+                              <button onClick={() => sync(row)}> Queue</button>
+                  </tr>
+                  {indx === productList.length && (<h1>{indx}</h1>)}
+              </>
                         ))}
 
-                        {/*<tr>*/}
-                        {/*{Object.values(productList).map((col, indx) =>*/}
-
-                        {/*    <td key={indx}>{col}</td>*/}
-
-                        {/*)}*/}
-                        {/*</tr>*/}
 
       </tbody>
     </table>
